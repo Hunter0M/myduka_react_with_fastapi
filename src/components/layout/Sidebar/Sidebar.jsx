@@ -17,7 +17,7 @@ const Sidebar = ({ isOpen, onClose }) => {
     }
   };
 
-  const navigation = [
+  const navigation = isAuthenticated ? [
     {
       title: 'Main',
       items: [
@@ -33,6 +33,13 @@ const Sidebar = ({ isOpen, onClose }) => {
       items: [
         { name: 'Import Products', href: '/import', icon: <FiUpload className="w-5 h-5" /> },
         { name: 'Import History', href: '/import/history', icon: <FiList className="w-5 h-5" /> },
+      ]
+    }
+  ] : [
+    {
+      title: 'Main',
+      items: [
+        { name: 'Home', href: '/', icon: <FiHome className="w-5 h-5" /> },
       ]
     }
   ];

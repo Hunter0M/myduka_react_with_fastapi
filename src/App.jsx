@@ -18,6 +18,7 @@ import Footer from "./components/layout/Footer/Footer";
 import ErrorPage from './pages/Error/ErrorPage';
 import ImportProducts from './components/import/ImportProducts';
 import ImportHistory from './components/import/ImportHistory';
+import ProfilePage from "./pages/profile/ProfilePage";
 
 
 function App() {
@@ -37,6 +38,7 @@ function App() {
                 {/* Protected Routes */}
                 <Route element={<ProtectedRoute />}>
                   <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/profile" element={<ProfilePage />} />
                   <Route path="products">
                     <Route index element={<Product />} />
                     <Route path="create" element={<CreateProduct />} />
