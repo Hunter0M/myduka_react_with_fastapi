@@ -3,9 +3,11 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Message from '../../components/Message';
 import Loading from '../../components/loading/Loading';
+import { eventEmitter } from '../../utils/eventEmitter';
 
 const API_URL = import.meta.env.VITE_Product_URL;
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+const DEFAULT_IMAGE = '/assets/default-product.svg';
 
 const UpdateProduct = () => {
   const { id } = useParams();
@@ -39,9 +41,7 @@ const UpdateProduct = () => {
           selling_price: product.selling_price,
           image_url: product.image_url,
         });
-        if (product.image_url) {
-          setImagePreview(`${BACKEND_URL}${product.image_url}`);
-        }
+        setImagePreview(product.image_url ? `${BACKEND_URL}${product.image_url}` : DEFAULT_IMAGE);
       } catch (err) {
         setMessage("Failed to fetch product details");
         setMessageType('error');
@@ -59,73 +59,150 @@ const UpdateProduct = () => {
     }));
   };
 
+
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (!file.type.startsWith('image/')) {
-        setMessage('Please select an image file');
-        setMessageType('error');
-        return;
-      }
-      setFormData(prev => ({
-        ...prev,
-        image_url: file
-      }));
-      setImagePreview(URL.createObjectURL(file));
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            setMessage('Please select an image file');
+            setMessageType('error');
+            return;
+        }
+        
+        // Validate file size (5MB limit)
+        const maxSize = 5 * 1024 * 1024;
+        if (file.size > maxSize) {
+            setMessage('Image size should not exceed 5MB');
+            setMessageType('error');
+            return;
+        }
+
+        // Update formData with the file
+        setFormData(prev => ({
+            ...prev,
+            image: file  // Changed from image_url to image
+        }));
+        setImagePreview(URL.createObjectURL(file));
     }
-  };
+};
+
+  // const handleImageChange = (e) => {
+  //   const file = e.target.files[0];
+  //   if (file) {
+  //     if (!file.type.startsWith('image/')) {
+  //       setMessage('Please select an image file');
+  //       setMessageType('error');
+  //       return;
+  //     }
+  //     setFormData(prev => ({
+  //       ...prev,
+  //       image_url: file
+  //     }));
+  //     setImagePreview(URL.createObjectURL(file));
+  //   }
+  // };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const formDataToSend = new FormData();
-      
-      if (formData.product_name) {
-        formDataToSend.append('product_name', formData.product_name);
-      }
-      if (formData.product_price) {
+        const formDataToSend = new FormData();
+        
+        // Add required fields
+        formDataToSend.append('product_name', formData.product_name.trim());
         formDataToSend.append('product_price', formData.product_price);
-      }
-      if (formData.selling_price) {
         formDataToSend.append('selling_price', formData.selling_price);
-      }
-      if (formData.stock_quantity) {
         formDataToSend.append('stock_quantity', formData.stock_quantity);
-      }
-      if (formData.description) {
-        formDataToSend.append('description', formData.description);
-      }
-      
-      if (formData.image_url instanceof File) {
-        formDataToSend.append('image', formData.image_url);
-      }
-
-      const response = await axios.put(`${API_URL}/${id}`, formDataToSend, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-        params: {
-          product_name: formData.product_name,
-          product_price: formData.product_price,
-          selling_price: formData.selling_price,
-          stock_quantity: formData.stock_quantity,
-          description: formData.description
+        
+        // Add optional fields
+        if (formData.description?.trim()) {
+            formDataToSend.append('description', formData.description.trim());
         }
-      });
+        
+        // Add image if exists
+        if (formData.image instanceof File) {
+            formDataToSend.append('image', formData.image);
+        }
 
-      setMessage('Product updated successfully!');
-      setMessageType('success');
+        console.log('FormData contents:');
+        for (let pair of formDataToSend.entries()) {
+            console.log(pair[0] + ': ' + pair[1]);
+        }
+
+        const response = await axios.put(
+            `${API_URL}/${id}`,
+            formDataToSend,
+            {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            }
+        );
+
+        if (response.data) {
+            setMessage(response.data.message);
+            setMessageType('success');
+            
+            // Update local state
+            setFormData(prev => ({
+                ...prev,
+                ...response.data.product,
+                image: null  // Reset image after successful upload
+            }));
+
+            // Update image preview
+            if (response.data.product.image_url) {
+                setImagePreview(`${BACKEND_URL}${response.data.product.image_url}`);
+            }
+
+            // Emit event
+            eventEmitter.emit('productUpdated', response.data.product);
+            
+            setTimeout(() => {
+                navigate('/products');
+            }, 2000);
+        }
+
+    } catch (err) {
+        console.error('Update error:', err);
+        if (err.response?.status === 400) {
+            setMessage(err.response.data.detail || 'Product name already exists');
+        } else {
+            setMessage(err.response?.data?.detail || 'Failed to update product');
+        }
+        setMessageType('error');
+    } finally {
+        setLoading(false);
+    }
+};
+
+  const handleRemoveImage = async () => {
+    try {
+      const response = await axios.put(`${API_URL}/${id}/remove-image`);
+
+      // Update local state
+      setImagePreview(DEFAULT_IMAGE);
+      setFormData(prev => ({ ...prev, image_url: null }));
       
+      // Emit event with updated product data
+      eventEmitter.emit('productUpdated', {
+        ...response.data.product,
+        image_url: null
+      });
+      
+      setMessage('Image removed successfully');
+      setMessageType('success');
+
       setTimeout(() => {
         navigate('/products');
       }, 2000);
-    } catch (err) {
-      setMessage(err.response?.data?.message || 'Failed to update product');
+
+    } catch (error) {
+      console.error('Remove image error:', error);
+      setMessage('Failed to remove image: ' + (error.response?.data?.detail || error.message));
       setMessageType('error');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -222,38 +299,30 @@ const UpdateProduct = () => {
                 {/* Image Preview Container */}
                 <div className="relative group">
                   <div className="w-40 h-40 rounded-xl overflow-hidden bg-gray-50 border-2 border-gray-200 border-dashed transition-all duration-300 group-hover:border-blue-400">
-                    {imagePreview ? (
-                      <div className="relative w-full h-full">
+                    <div className="relative w-full h-full">
+                      {formData.image_url ? (
                         <img
                           src={imagePreview}
                           alt="Preview"
                           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = DEFAULT_IMAGE;
+                          }}
                         />
-                        {/* Overlay on hover */}
-                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
-                          <p className="text-white opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 text-sm font-medium">
-                            Change Image
-                          </p>
-                        </div>
+                      ) : (
+                        <img
+                          src={DEFAULT_IMAGE}
+                          alt="Default preview"
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                      )}
+                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center">
+                        <p className="text-white opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 text-sm font-medium">
+                          {!formData.image_url ? 'Upload Image' : 'Change Image'}
+                        </p>
                       </div>
-                    ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center">
-                        <svg
-                          className="w-12 h-12 text-gray-400 mb-2"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={1.5}
-                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                          />
-                        </svg>
-                        <p className="text-sm text-gray-500">No image uploaded</p>
-                      </div>
-                    )}
+                    </div>
                   </div>
                 </div>
 
@@ -291,34 +360,29 @@ const UpdateProduct = () => {
                         Upload New Image
                       </label>
                       
-                      {imagePreview && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setImagePreview(null);
-                            setFormData(prev => ({ ...prev, image: null }));
-                          }}
-                          className="inline-flex items-center justify-center px-4 py-2.5 border border-red-200 rounded-lg
-                                   text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100
-                                   focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500
-                                   transition-all duration-200"
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        className="inline-flex items-center justify-center px-4 py-2.5 border border-red-200 rounded-lg
+                                 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100
+                                 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500
+                                 transition-all duration-200"
+                      >
+                        <svg
+                          className="w-5 h-5 mr-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
                         >
-                          <svg
-                            className="w-5 h-5 mr-2"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                            />
-                          </svg>
-                          Remove Image
-                        </button>
-                      )}
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          />
+                        </svg>
+                        Remove Image
+                      </button>
                     </div>
                   </div>
                 </div>

@@ -36,6 +36,43 @@ const LoginPage = () => {
     }
   }, [location, navigate]);
 
+  useEffect(() => {
+    // Check token expiration every minute
+    const checkTokenExpiration = () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      try {
+        // Decode the JWT token
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const expirationTime = payload.exp * 1000; // Convert to milliseconds
+        const currentTime = Date.now();
+        
+        // If token is expired or about to expire in the next minute
+        if (currentTime >= expirationTime - 60000) { // 60000ms = 1 minute
+          // Clear auth data
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          sessionStorage.setItem('authMessage', 'Your session has expired. Please log in again.');
+          window.location.reload(); // Force page refresh
+        }
+      } catch (error) {
+        console.error('Error checking token expiration:', error);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        sessionStorage.setItem('authMessage', 'Session error. Please log in again.');
+        window.location.reload();
+      }
+    };
+
+    // Check immediately and then every minute
+    checkTokenExpiration();
+    const intervalId = setInterval(checkTokenExpiration, 60000);
+
+    // Cleanup interval on component unmount
+    return () => clearInterval(intervalId);
+  }, []);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -57,9 +94,6 @@ const LoginPage = () => {
     try {
       await login(formData.email, formData.password);
       showMessage('Login successful! Redirecting...', 'success');
-      setTimeout(() => {
-        navigate('/');
-      }, 1000);
     } catch (err) {
       showMessage(
         err.response?.data?.detail || 'Invalid email or password',

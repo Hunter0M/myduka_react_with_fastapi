@@ -12,6 +12,12 @@ export const ThemeProvider = ({ children }) => {
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
 
+
+//   @myduka_react_with_fastapi 
+// how to use the transleate to multpul lunguage using google transelate like this website : @https://ahdlondon.co/?srsltid=AfmBOooo0XcOoGe8_WtCWroJtmBb7xbI4VpQOeaFwNLGB3qPFNwpKqa_ 
+
+
+
   // Update theme when it changes
   useEffect(() => {
     if (isDark) {

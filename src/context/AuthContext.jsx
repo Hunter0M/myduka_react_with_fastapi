@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/axiosConfig';
 
@@ -14,37 +14,17 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const refreshIntervalRef = useRef(null);
 
   const logout = (message = '') => {
-    // Clear all auth data
+    if (refreshIntervalRef.current) {
+      clearInterval(refreshIntervalRef.current);
+    }
     localStorage.clear();
     setUser(null);
-    
-    // Force navigation to login
-    window.location.href = '/login'; // Using window.location for hard redirect
+    navigate('/login', { state: { message } });
   };
 
-  // Add interceptor for token expiration
-  useEffect(() => {
-    const interceptor = api.interceptors.response.use(
-      (response) => response,
-      (error) => {
-        // Check if error is 401 (Unauthorized)
-        if (error.response?.status === 401) {
-          // Clear everything and redirect to login
-          localStorage.clear();
-          setUser(null);
-          window.location.href = '/login';
-          return Promise.reject(new Error('Session expired'));
-        }
-        return Promise.reject(error);
-      }
-    );
-
-    return () => api.interceptors.response.eject(interceptor);
-  }, []);
-
-  // Add refreshToken function
   const refreshToken = async () => {
     try {
       const refresh = localStorage.getItem(TOKEN_CONFIG.REFRESH_TOKEN);
@@ -59,42 +39,39 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem(TOKEN_CONFIG.REFRESH_TOKEN, data.refresh_token);
       }
 
+      console.log('Token refreshed at:', new Date().toLocaleTimeString());
       return data.access_token;
     } catch (error) {
+      console.error('Token refresh failed:', error);
+      logout('Session expired. Please login again.');
       throw error;
     }
   };
 
-  // Update the token expiration check to attempt refresh
+  // Set up refresh interval when user is logged in
   useEffect(() => {
-    const checkTokenExpiration = async () => {
-      const token = localStorage.getItem(TOKEN_CONFIG.ACCESS_TOKEN);
-      if (!token) return;
-
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        const expirationTime = payload.exp * 1000;
-
-        // If token is expired or about to expire in the next minute
-        if (Date.now() >= expirationTime - 60000) {
-          try {
-            await refreshToken();
-          } catch (error) {
-            console.error('Token refresh failed:', error);
-            logout('Session expired. Please login again.');
-          }
-        }
-      } catch (error) {
-        console.error('Token validation error:', error);
-        logout('Authentication error. Please login again.');
+    const startTokenRefresh = () => {
+      if (refreshIntervalRef.current) {
+        clearInterval(refreshIntervalRef.current);
       }
+
+      refreshToken().catch(console.error);
+
+      refreshIntervalRef.current = setInterval(() => {
+        refreshToken().catch(console.error);
+      }, 60000);
     };
 
-    const interval = setInterval(checkTokenExpiration, 60000);
-    checkTokenExpiration();
+    if (user) {
+      startTokenRefresh();
+    }
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => {
+      if (refreshIntervalRef.current) {
+        clearInterval(refreshIntervalRef.current);
+      }
+    };
+  }, [user]);
 
   // Add request interceptor to include token
   useEffect(() => {
@@ -130,7 +107,7 @@ export const AuthProvider = ({ children }) => {
         console.error('Auth check failed:', error);
         logout('Authentication failed. Please login again.');
       } finally {
-        setLoading(false);
+        setLoading(false); // Ensure loading is set to false
       }
     };
 
@@ -140,17 +117,27 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const { data } = await api.post('/login', { email, password });
-      const { access_token, refresh_token } = data;
-
-      localStorage.setItem(TOKEN_CONFIG.ACCESS_TOKEN, access_token);
-      localStorage.setItem(TOKEN_CONFIG.REFRESH_TOKEN, refresh_token);
+      localStorage.setItem(TOKEN_CONFIG.ACCESS_TOKEN, data.access_token);
+      localStorage.setItem(TOKEN_CONFIG.REFRESH_TOKEN, data.refresh_token);
       localStorage.setItem(TOKEN_CONFIG.USER_EMAIL, email);
 
       const userResponse = await api.get(`/users/email/${email}`);
       setUser(userResponse.data);
-      return true;
+      navigate('/dashboard');
     } catch (error) {
       throw error;
+    }
+  };
+
+  const checkIsTokenValid = () => {
+    const token = localStorage.getItem(TOKEN_CONFIG.ACCESS_TOKEN);
+    if (!token) return false;
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return Date.now() < payload.exp * 1000;
+    } catch (error) {
+      return false;
     }
   };
 
@@ -160,7 +147,7 @@ export const AuthProvider = ({ children }) => {
     loading,
     login,
     logout,
-    refreshToken
+    checkIsTokenValid
   };
 
   return (

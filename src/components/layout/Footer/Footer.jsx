@@ -1,15 +1,27 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { useTheme } from "../../../context/ThemeContext";
+import { useAuth } from "../../../context/AuthContext";
+
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const { isDark } = useTheme();
+  const { isAuthenticated } = useAuth();
+
 
   return (
-    <footer className="bg-gray-900 text-gray-300">
-      {/* Wave Separator - Made responsive */}
+    <footer
+      className={`${
+        isDark ? "bg-gray-900 text-gray-300" : "bg-blue-600 text-gray-100"
+      } transition-colors duration-200`}
+    >
+      {/* Wave Separator */}
       <div className="relative">
         <svg
-          className="w-full h-8 sm:h-12 fill-current text-white"
+          className={`w-full h-8 sm:h-12 fill-current ${
+            isDark ? "text-gray-800" : "text-white"
+          }`}
           viewBox="0 0 1440 48"
           preserveAspectRatio="none"
         >
@@ -19,7 +31,6 @@ const Footer = () => {
 
       {/* Main Footer Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-12 pb-6 sm:pb-8">
-        {/* Grid Layout - Responsive columns */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-12 mb-8 sm:mb-16">
           {/* Company Info */}
           <div className="space-y-4 sm:space-y-6">
@@ -29,20 +40,32 @@ const Footer = () => {
                   IC
                 </span>
               </div>
-              <h2 className="text-lg sm:text-xl font-bold text-white">
+              <h2
+                className={`text-lg sm:text-xl font-bold ${
+                  isDark ? "text-white" : "text-gray-100"
+                }`}
+              >
                 InventoryControl
               </h2>
             </div>
-            <p className="text-sm sm:text-base text-gray-400 leading-relaxed">
+            <p
+              className={`text-sm sm:text-base ${
+                isDark ? "text-gray-400" : "text-gray-300"
+              } leading-relaxed`}
+            >
               Empowering businesses with smart inventory solutions for the
               modern world.
             </p>
-            {/* Social Icons - Made responsive */}
+            {/* Social Icons */}
             <div className="flex space-x-3 sm:space-x-4">
               <a
                 href="https://www.facebook.com/alrdaey/"
                 target="_blank"
-                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-800 flex items-center justify-center group hover:bg-gradient-to-r hover:from-blue-500 hover:to-blue-600 transition-all duration-300"
+                className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full ${
+                  isDark
+                    ? "bg-gray-800 hover:bg-gray-700"
+                    : "bg-blue-500 hover:bg-blue-400"
+                } flex items-center justify-center group transition-all duration-300`}
               >
                 <svg
                   className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 group-hover:text-white"
@@ -55,7 +78,11 @@ const Footer = () => {
               <a
                 href="https://x.com/"
                 target="_blank"
-                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-800 flex items-center justify-center group hover:bg-gradient-to-r hover:from-blue-400 hover:to-blue-500 transition-all duration-300"
+                className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full ${
+                  isDark
+                    ? "bg-gray-800 hover:bg-gray-700"
+                    : "bg-blue-500 hover:bg-blue-400"
+                } flex items-center justify-center group transition-all duration-300`}
               >
                 <svg
                   className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 group-hover:text-white"
@@ -68,7 +95,11 @@ const Footer = () => {
               <a
                 href="https://www.linkedin.com/in/hunter-ahmed-361460243/"
                 target="_blank"
-                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-800 flex items-center justify-center group hover:bg-gradient-to-r hover:from-blue-600 hover:to-blue-700 transition-all duration-300"
+                className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full ${
+                  isDark
+                    ? "bg-gray-800 hover:bg-gray-700"
+                    : "bg-blue-500 hover:bg-blue-400"
+                } flex items-center justify-center group transition-all duration-300`}
               >
                 <svg
                   className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 group-hover:text-white"
@@ -81,29 +112,43 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Quick Links - Responsive spacing */}
-          <div className="mt-4 sm:mt-0">
-            <h3 className="text-base sm:text-lg font-semibold text-white mb-4 sm:mb-6 relative inline-block">
-              Quick Links
-              <span className="absolute bottom-0 left-0 w-1/2 h-0.5 bg-blue-500"></span>
-            </h3>
-            <ul className="space-y-2 sm:space-y-4">
-              <li>
-                <Link
-                  to="/dashboard"
-                  className="group flex items-center text-sm sm:text-base text-gray-400 hover:text-white transition-colors duration-300"
-                >
-                  <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-blue-500 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-                  Dashboard
-                </Link>
-              </li>
-              {/* Add other quick links similarly */}
-            </ul>
-          </div>
+          {/* Quick Links */}
+          {isAuthenticated && (
+            <div className="mt-4 sm:mt-0">
+              <h3
+                className={`text-base sm:text-lg font-semibold ${
+                  isDark ? "text-white" : "text-gray-100"
+                } mb-4 sm:mb-6 relative inline-block`}
+              >
+                Quick Links
+                <span className="absolute bottom-0 left-0 w-1/2 h-0.5 bg-blue-500"></span>
+              </h3>
+              <ul className="space-y-2 sm:space-y-4">
+                <li>
+                  <Link
+                    to="/dashboard"
+                    className={`group flex items-center text-sm sm:text-base ${
+                      isDark
+                        ? "text-gray-400 hover:text-white"
+                        : "text-blue-100 hover:text-white"
+                    } transition-colors duration-300`}
+                  >
+                    <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-blue-500 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+                    Dashboard
+                  </Link>
+                </li>
+                {/* Update other quick links similarly */}
+              </ul>
+            </div>
+          )}
 
-          {/* Support - Responsive spacing */}
+          {/* Support */}
           <div className="mt-4 sm:mt-0">
-            <h3 className="text-base sm:text-lg font-semibold text-white mb-4 sm:mb-6 relative inline-block">
+            <h3
+              className={`text-base sm:text-lg font-semibold ${
+                isDark ? "text-white" : "text-gray-100"
+              } mb-4 sm:mb-6 relative inline-block`}
+            >
               Support
               <span className="absolute bottom-0 left-0 w-1/2 h-0.5 bg-blue-500"></span>
             </h3>
@@ -111,26 +156,38 @@ const Footer = () => {
               <li>
                 <a
                   href="#"
-                  className="group flex items-center text-sm sm:text-base text-gray-400 hover:text-white transition-colors duration-300"
+                  className={`group flex items-center text-sm sm:text-base ${
+                    isDark
+                      ? "text-gray-400 hover:text-white"
+                      : "text-blue-100 hover:text-white"
+                  } transition-colors duration-300`}
                 >
                   <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-blue-500 mr-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
                   Help Center
                 </a>
               </li>
-              {/* Add other support links similarly */}
+              {/* Update other support links similarly */}
             </ul>
           </div>
 
-          {/* Contact - Responsive design */}
+          {/* Contact */}
           <div className="mt-4 sm:mt-0">
-            <h3 className="text-base sm:text-lg font-semibold text-white mb-4 sm:mb-6 relative inline-block">
+            <h3
+              className={`text-base sm:text-lg font-semibold ${
+                isDark ? "text-white" : "text-gray-100"
+              } mb-4 sm:mb-6 relative inline-block`}
+            >
               Contact Us
               <span className="absolute bottom-0 left-0 w-1/2 h-0.5 bg-blue-500"></span>
             </h3>
             <div className="space-y-3 sm:space-y-4">
               <a
                 href="mailto:support@example.com"
-                className="group flex items-center space-x-3 p-2 sm:p-3 rounded-lg bg-gray-800 hover:bg-gray-700 transition-all duration-300"
+                className={`group flex items-center space-x-3 p-2 sm:p-3 rounded-lg ${
+                  isDark
+                    ? "bg-gray-800 hover:bg-gray-700"
+                    : "bg-blue-500 hover:bg-blue-400"
+                } transition-all duration-300`}
               >
                 <svg
                   className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500"
@@ -151,7 +208,11 @@ const Footer = () => {
               </a>
               <a
                 href="tel:+15551234567"
-                className="group flex items-center space-x-3 p-2 sm:p-3 rounded-lg bg-gray-800 hover:bg-gray-700 transition-all duration-300"
+                className={`group flex items-center space-x-3 p-2 sm:p-3 rounded-lg ${
+                  isDark
+                    ? "bg-gray-800 hover:bg-gray-700"
+                    : "bg-blue-500 hover:bg-blue-400"
+                } transition-all duration-300`}
               >
                 <svg
                   className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500"
@@ -174,9 +235,17 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Bottom Bar - Responsive padding */}
-        <div className="border-t border-gray-800 pt-6 sm:pt-8">
-          <p className="text-xs sm:text-sm text-gray-500 text-center">
+        {/* Bottom Bar */}
+        <div
+          className={`border-t ${
+            isDark ? "border-gray-800" : "border-blue-500"
+          } pt-6 sm:pt-8`}
+        >
+          <p
+            className={`text-xs sm:text-sm ${
+              isDark ? "text-gray-500" : "text-gray-400"
+            } text-center`}
+          >
             © {currentYear} InventoryControl. All rights reserved by{" "}
             <a
               href="https://www.linkedin.com/in/hunter-ahmed-361460243/"

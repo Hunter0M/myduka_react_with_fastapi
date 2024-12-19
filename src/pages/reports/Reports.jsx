@@ -11,6 +11,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 const Reports = () => {
+const API_URL = import.meta.env.VITE_Product_URL;
   const [reportData, setReportData] = useState({
     totalSales: 0,
     averagePrice: 0,
@@ -24,11 +25,14 @@ const Reports = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
+
   useEffect(() => {
     const fetchReportData = async () => {
       try {
         setIsLoading(true);
-        const response = await axios.get('http://localhost:8000/products');
+        // const response = await api.get('/products');
+        const response = await axios.get(API_URL);
+
         const products = Array.isArray(response.data) ? response.data : response.data.products;
 
         if (!Array.isArray(products)) {

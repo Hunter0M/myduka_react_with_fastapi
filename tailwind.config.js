@@ -10,11 +10,13 @@ export default {
 
     "./node_modules/@material-tailwind/react/**/*.{js,ts,jsx,tsx}",
   ],
+  
   darkMode: "class",
   theme: {
     extend: {
       screens: {
         xs: "480px",
+        'print': {'raw': 'print'},
       },
       keyframes: {
         "slide-in": {
@@ -47,8 +49,14 @@ export default {
       animation: {
         "slide-in": "slide-in 0.3s ease-out",
       },
+      backgroundColor: {
+        'print-white': '#ffffff',
+        'print-gray': '#f9fafb',
+      }
     },
+    
   },
+  
 
   plugins: [mtConfig],
 };

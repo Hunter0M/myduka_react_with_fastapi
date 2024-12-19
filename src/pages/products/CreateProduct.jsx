@@ -4,10 +4,17 @@ import api from '../../services/axiosConfig';
 import Message from '../../components/Message';
 import Loading from '../../components/loading/Loading';
 
+const DEFAULT_IMAGE = 'https://placehold.co/400x400?text=No+Image';
+
 const CreateProduct = () => {
   const navigate = useNavigate();
+  
+  // All state declarations
   const [message, setMessage] = useState(null);
   const [messageType, setMessageType] = useState('success');
+  const [loading, setLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [imagePreview, setImagePreview] = useState(DEFAULT_IMAGE);
   
   const [formData, setFormData] = useState({
     product_name: '',
@@ -17,18 +24,37 @@ const CreateProduct = () => {
     description: '',
     image: null
   });
-  const [imagePreview, setImagePreview] = useState(null);
 
-  const [loading, setLoading] = useState(false);
+  // Add this new function after your state declarations
+  const checkProductName = async (name) => {
+    try {
+      const response = await api.get(`/products/check-name?product_name=${encodeURIComponent(name.trim())}`);
+      console.log('Name check response:', response.data); // Debug log
+      return response.data.exists;
+    } catch (err) {
+      console.error('Error checking product name:', err);
+      return false;
+    }
+  };
 
+  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
+    
+    // Clear error for this field when user starts typing
+    if (fieldErrors[name]) {
+      setFieldErrors(prev => ({
+        ...prev,
+        [name]: null
+      }));
+    }
   };
 
+  // Handle image changes
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -37,7 +63,6 @@ const CreateProduct = () => {
         image: file
       }));
 
-      // Create preview URL
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
@@ -46,51 +71,81 @@ const CreateProduct = () => {
     }
   };
 
+  // Form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Clear previous errors
+    setFieldErrors({});
+    
+    // Validate all required fields
+    const errors = {};
+    if (!formData.product_name?.trim()) {
+      errors.product_name = 'Product Name is required';
+    }
+    if (!formData.product_price || isNaN(formData.product_price)) {
+      errors.product_price = 'Valid Buying Price is required';
+    }
+    if (!formData.selling_price || isNaN(formData.selling_price)) {
+      errors.selling_price = 'Valid Selling Price is required';
+    }
+    if (!formData.stock_quantity || isNaN(formData.stock_quantity)) {
+      errors.stock_quantity = 'Valid Stock Quantity is required';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setMessage('Please fill in all required fields correctly');
+      setMessageType('error');
+      return;
+    }
+
     setLoading(true);
     
     try {
-      // Validate form data
-      const productName = formData.product_name.trim();
-      if (!productName) {
-        setMessage('Product name is required');
+      // Check if product name exists - make sure to wait for the result
+      const nameExists = await checkProductName(formData.product_name);
+      console.log('Product name exists?', nameExists); // Debug log
+      
+      if (nameExists) {
+        setFieldErrors(prev => ({
+          ...prev,
+          product_name: 'This product name already exists'
+        }));
+        setMessage('A product with this name already exists. Please choose a different name.');
         setMessageType('error');
         setLoading(false);
         return;
       }
 
-      // Create FormData
+      // If we get here, the name is unique - proceed with product creation
       const formDataToSend = new FormData();
-      
-      // Convert numeric values to numbers and append to FormData
-      formDataToSend.append('product_name', productName);
-      formDataToSend.append('product_price', Number(formData.product_price));
-      formDataToSend.append('selling_price', Number(formData.selling_price));
-      formDataToSend.append('stock_quantity', Number(formData.stock_quantity));
-      
-      if (formData.description) {
-        formDataToSend.append('description', formData.description.trim());
-      }
       
       if (formData.image instanceof File) {
         formDataToSend.append('image', formData.image);
       }
 
-      // Make the request with the correct content type
-      const response = await api.post('/products', formDataToSend, {
+      const params = new URLSearchParams({
+        product_name: formData.product_name.trim(),
+        product_price: Math.round(Number(formData.product_price)),
+        selling_price: Math.round(Number(formData.selling_price)),
+        stock_quantity: Math.round(Number(formData.stock_quantity))
+      });
+
+      if (formData.description?.trim()) {
+        params.append('description', formData.description.trim());
+      }
+
+      const url = `/products?${params.toString()}`;
+      console.log('Submitting to URL:', url); // Debug log
+
+      const response = await api.post(url, formDataToSend, {
         headers: {
           'Content-Type': 'multipart/form-data',
-          'Accept': 'application/json'
-        },
-        // Add params for the required fields
-        params: {
-          product_name: productName,
-          product_price: Number(formData.product_price),
-          selling_price: Number(formData.selling_price),
-          stock_quantity: Number(formData.stock_quantity)
         }
       });
+
+      console.log('Product creation response:', response.data); // Debug log
 
       setMessage('Product created successfully!');
       setMessageType('success');
@@ -104,33 +159,28 @@ const CreateProduct = () => {
         description: '',
         image: null
       });
-      setImagePreview(null);
+      setImagePreview(DEFAULT_IMAGE);
 
       setTimeout(() => {
         navigate('/products');
       }, 2000);
 
     } catch (err) {
-      console.error('Full error:', err);
+      console.error('API Error:', err.response?.data || err);
       
       if (err.response?.data?.detail) {
         const detail = err.response.data.detail;
         if (Array.isArray(detail)) {
-          // Enhanced validation error display
           const errorMessages = detail.map(error => {
             const field = error.loc ? error.loc[error.loc.length - 1] : 'unknown';
-            const msg = error.msg || 'Unknown error';
-            console.log(`Validation error for ${field}:`, error); // Debug log
-            return `${field}: ${msg}`;
-          });
-          setMessage(errorMessages.join('\n'));
+            return `${field}: ${error.msg}`;
+          }).join('\n');
+          setMessage(errorMessages);
         } else {
           setMessage(detail);
         }
-      } else if (err.response?.status === 401) {
-        setMessage('Please login to create products');
       } else {
-        setMessage(`Failed to create product: ${err.message}`);
+        setMessage('Failed to create product. Please try again.');
       }
       setMessageType('error');
     } finally {
@@ -276,30 +326,17 @@ const CreateProduct = () => {
             >
               Product Image
             </label>
-            <div className="mt-1 flex items-center space-x-4">
-              {/* Image Preview */}
-              <div className="w-32 h-32 border-2 border-gray-300 border-dashed rounded-lg overflow-hidden flex items-center justify-center">
-                {imagePreview ? (
-                  <img
-                    src={imagePreview}
-                    alt="Preview"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <svg
-                    className="w-12 h-12 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
-                )}
+            <div className="mt-2 flex items-center gap-x-3">
+              <div className="relative w-40 h-40 rounded-lg overflow-hidden">
+                <img
+                  src={imagePreview}
+                  alt="Product preview"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null; // Prevent infinite loop
+                    e.target.src = DEFAULT_IMAGE;
+                  }}
+                />
               </div>
 
               {/* Upload Button */}

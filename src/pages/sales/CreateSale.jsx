@@ -111,93 +111,110 @@ const CreateSale = () => {
     e.preventDefault();
 
     if (!loggedInUser) {
-      setMessage('User not authenticated');
-      setMessageType('error');
-      navigate('/login');
-      return;
+        setMessage('User not authenticated');
+        setMessageType('error');
+        navigate('/login');
+        return;
     }
 
     if (quantityError) {
-      setMessage("Please correct the quantity errors before submitting");
-      setMessageType("error");
-      return;
+        setMessage("Please correct the quantity errors before submitting");
+        setMessageType("error");
+        return;
     }
 
     setLoading(true);
 
     try {
-      const saleData = {
-        pid: parseInt(formData.product_id),
-        user_id: loggedInUser.id,
-        quantity: parseInt(formData.quantity),
-        product_name: selectedProduct.product_name,
-        first_name: loggedInUser.first_name,
-        selling_price: selectedProduct.selling_price,
-        user_email: loggedInUser.email
-      };
+        // First, create the sale
+        const saleData = {
+            pid: parseInt(formData.product_id),
+            user_id: loggedInUser.id,
+            quantity: parseInt(formData.quantity)
+        };
 
-      const token = localStorage.getItem('access_token');
-      const saleResponse = await axios.post(
-        `${import.meta.env.VITE_API_URL}/sales`,
-        saleData,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
+        const token = localStorage.getItem('access_token');
+        const saleResponse = await axios.post(
+            `${import.meta.env.VITE_API_URL}/sales`,
+            saleData,
+            {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        if (saleResponse.data) {
+            // Calculate new stock quantity
+            const newStockQuantity = selectedProduct.stock_quantity - parseInt(formData.quantity);
+            
+            // Create FormData for product update
+            const productFormData = new FormData();
+            productFormData.append('product_name', selectedProduct.product_name);
+            productFormData.append('product_price', selectedProduct.product_price);
+            productFormData.append('selling_price', selectedProduct.selling_price);
+            productFormData.append('stock_quantity', newStockQuantity);
+            if (selectedProduct.description) {
+                productFormData.append('description', selectedProduct.description);
+            }
+
+            // Update product stock
+            await axios.put(
+                `${import.meta.env.VITE_Product_URL}/${formData.product_id}`,
+                productFormData,
+                {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                }
+            );
+
+            // Update local products state
+            setProducts(prevProducts => 
+                prevProducts.map(product => 
+                    product.id === parseInt(formData.product_id)
+                        ? { ...product, stock_quantity: newStockQuantity }
+                        : product
+                )
+            );
+
+            setMessage('Sale created successfully and stock updated!');
+            setMessageType('success');
+            
+            // Reset form
+            setFormData({
+                product_id: '',
+                quantity: '',
+            });
+            setSelectedProduct(null);
+            
+            // Navigate after delay
+            setTimeout(() => {
+                navigate('/sales');
+            }, 2000);
         }
-      );
-
-      if (saleResponse.data) {
-        const newStockQuantity = selectedProduct.stock_quantity - parseInt(formData.quantity);
-        
-        await axios.put(
-          `${import.meta.env.VITE_Product_URL}/${formData.product_id}`,
-          {
-            stock_quantity: newStockQuantity
-          }
-        );
-
-        setMessage('Sale created successfully and stock updated!');
-        setMessageType('success');
-        
-        setProducts(prevProducts => 
-          prevProducts.map(product => 
-            product.id === parseInt(formData.product_id)
-              ? { ...product, stock_quantity: newStockQuantity }
-              : product
-          )
-        );
-        
-        setFormData({
-          product_id: '',
-          quantity: '',
-        });
-        setSelectedProduct(null);
-        
-        setTimeout(() => {
-          navigate('/sales');
-        }, 2000);
-      }
 
     } catch (err) {
-      console.error('Error details:', err.response?.data);
-      let errorMessage = 'Failed to create sale';
-      
-      if (err.response?.data?.message) {
-        errorMessage = err.response.data.message;
-      } else if (err.response?.data?.error) {
-        errorMessage = err.response.data.error;
-      } else if (typeof err.response?.data === 'string') {
-        errorMessage = err.response.data;
-      }
-      
-      setMessage(errorMessage);
-      setMessageType('error');
+        console.error('Error details:', err.response?.data);
+        let errorMessage = 'Failed to create sale';
+        
+        if (err.response?.data?.detail) {
+            errorMessage = err.response.data.detail;
+        } else if (err.response?.data?.message) {
+            errorMessage = err.response.data.message;
+        } else if (err.response?.data?.error) {
+            errorMessage = err.response.data.error;
+        } else if (typeof err.response?.data === 'string') {
+            errorMessage = err.response.data;
+        }
+        
+        setMessage(errorMessage);
+        setMessageType('error');
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
-  };
+};
 
   useEffect(() => {
     if (formData.product_id) {

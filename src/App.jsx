@@ -19,6 +19,7 @@ import ErrorPage from './pages/Error/ErrorPage';
 import ImportProducts from './components/import/ImportProducts';
 import ImportHistory from './components/import/ImportHistory';
 import ProfilePage from "./pages/profile/ProfilePage";
+import UpdateSale from './pages/sales/UpdateSale';
 
 
 function App() {
@@ -49,6 +50,7 @@ function App() {
                   <Route path="sales">
                     <Route index element={<Sales />} />
                     <Route path="create" element={<CreateSale />} />
+                    <Route path="edit/:id" element={<UpdateSale />} />
                   </Route>
                   
                 </Route>

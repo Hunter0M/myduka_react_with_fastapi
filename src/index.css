@@ -32,31 +32,64 @@ body {
 }
 
 
-/* Print styles for receipt */
+/* Update the print styles */
 @media print {
-  /* Hide all other elements */
-  body > *:not(.print-receipt) {
-    display: none !important;
+  /* Hide everything first */
+  body * {
+    visibility: hidden;
+  }
+  
+  /* Then show only the print-only content */
+  .print-only,
+  .print-only * {
+    visibility: visible !important;
+    display: block !important;
   }
 
-  .print-receipt {
-    padding: 20px !important;
+  .print-only {
+    position: absolute;
+    left: 0;
+    top: 0;
   }
 
-  /* Reset colors for printing */
+  /* Receipt specific styles */
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background: white;
+    color: black;
+  }
+
+  /* Enhanced table styles */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+  }
+
+  th, td {
+    padding: 12px;
+    text-align: left;
+  }
+
+  th {
+    background-color: #f8f9fa !important;
+    font-weight: bold;
+  }
+
+  tr:nth-child(even) {
+    background-color: #f8f9fa !important;
+  }
+
+  /* Better text contrast */
   * {
     color: black !important;
-    background-color: white !important;
-  }
-
-  /* Remove shadows and borders */
-  .shadow-xl {
+    text-shadow: none !important;
     box-shadow: none !important;
-  }
-
-  /* Set page margins */
-  @page {
-    margin: 1cm;
-    size: auto;
   }
 }
