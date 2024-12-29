@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import ChartsContainer from './ChartsContainer';
 import DataTable from "react-data-table-component";
 import Loading from '../../components/loading/Loading';
+import { useTheme } from '../../context/ThemeContext';
 
 // Import icons
 import {
@@ -18,6 +19,7 @@ import {
   HiOutlineChartBar,
   HiOutlineCalendar,
   HiOutlineCurrencyDollar,
+  HiOutlineUsers,
 } from "react-icons/hi";
 import {
   HiOutlineBanknotes,
@@ -28,6 +30,23 @@ import { PiChartLineUpBold } from "react-icons/pi";
 import { TbTruckDelivery } from "react-icons/tb";
 
 const Dashboard = () => {
+  const { isDark } = useTheme();
+  const [successMessage, setSuccessMessage] = useState('');
+
+  useEffect(() => {
+    // Check for auth success message
+    const authSuccess = sessionStorage.getItem('authSuccess');
+    if (authSuccess) {
+      setSuccessMessage(authSuccess);
+      // Clear the message after showing it
+      sessionStorage.removeItem('authSuccess');
+      // Auto-hide the message after 5 seconds
+      setTimeout(() => {
+        setSuccessMessage('');
+      }, 5000);
+    }
+  }, []);
+
   // State declarations
   const [stats, setStats] = useState({
     totalProducts: 0,
@@ -54,60 +73,60 @@ const Dashboard = () => {
   const statsDisplay = [
     {
       title: "Total Products",
-      value: stats.totalProducts.toLocaleString(), // The toLocaleString() method in JavaScript is used to convert a Date or Number object to a string, using locale settings.
-      icon: <HiOutlineCube className="w-8 h-8 text-blue-600" />,
-      bgColor: "bg-blue-50",
-      textColor: "text-blue-600",
+      value: stats.totalProducts.toLocaleString(),
+      icon: <HiOutlineCube className={`w-8 h-8 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />,
+      bgColor: isDark ? 'bg-gray-800' : 'bg-blue-50',
+      textColor: isDark ? 'text-blue-400' : 'text-blue-600',
     },
     {
       title: "Low Stock",
       value: stats.lowStock.toLocaleString(),
-      icon: <HiOutlineExclamationCircle className="w-8 h-8 text-yellow-600" />,
-      bgColor: "bg-yellow-50",
-      textColor: "text-yellow-600",
+      icon: <HiOutlineExclamationCircle className={`w-8 h-8 ${isDark ? 'text-yellow-400' : 'text-yellow-600'}`} />,
+      bgColor: isDark ? 'bg-gray-800' : 'bg-yellow-50',
+      textColor: isDark ? 'text-yellow-400' : 'text-yellow-600',
     },
     {
       title: "Out of Stock",
       value: stats.outOfStock.toLocaleString(),
-      icon: <HiOutlineXCircle className="w-8 h-8 text-red-600" />,
-      bgColor: "bg-red-50",
-      textColor: "text-red-600",
+      icon: <HiOutlineXCircle className={`w-8 h-8 ${isDark ? 'text-red-400' : 'text-red-600'}`} />,
+      bgColor: isDark ? 'bg-gray-800' : 'bg-red-50',
+      textColor: isDark ? 'text-red-400' : 'text-red-600',
     },
     {
       title: "Total Value",
       value: `KES ${stats.totalValue.toLocaleString()}`,
-      icon: <HiOutlineBanknotes className="w-8 h-8 text-green-600" />,
-      bgColor: "bg-green-50",
-      textColor: "text-green-600",
+      icon: <HiOutlineBanknotes className={`w-8 h-8 ${isDark ? 'text-green-400' : 'text-green-600'}`} />,
+      bgColor: isDark ? 'bg-gray-800' : 'bg-green-50',
+      textColor: isDark ? 'text-green-400' : 'text-green-600',
     },
     {
       title: "Today's Sales",
       value: salesStats.todaySales.toLocaleString(),
       subValue: `KES ${salesStats.todayRevenue.toLocaleString()}`,
-      icon: <HiOutlineShoppingCart className="w-8 h-8 text-purple-600" />,
-      bgColor: "bg-purple-50",
-      textColor: "text-purple-600",
+      icon: <HiOutlineShoppingCart className={`w-8 h-8 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />,
+      bgColor: isDark ? 'bg-gray-800' : 'bg-purple-50',
+      textColor: isDark ? 'text-purple-400' : 'text-purple-600',
     },
     {
       title: "Weekly Sales",
       value: salesStats.weekSales.toLocaleString(),
-      icon: <HiOutlineChartBar className="w-8 h-8 text-indigo-600" />,
-      bgColor: "bg-indigo-50",
-      textColor: "text-indigo-600",
+      icon: <HiOutlineChartBar className={`w-8 h-8 ${isDark ? 'text-indigo-400' : 'text-indigo-600'}`} />,
+      bgColor: isDark ? 'bg-gray-800' : 'bg-indigo-50',
+      textColor: isDark ? 'text-indigo-400' : 'text-indigo-600',
     },
     {
       title: "Monthly Sales",
       value: salesStats.monthSales.toLocaleString(),
-      icon: <HiOutlineCalendar className="w-8 h-8 text-pink-600" />,
-      bgColor: "bg-pink-50",
-      textColor: "text-pink-600",
+      icon: <HiOutlineCalendar className={`w-8 h-8 ${isDark ? 'text-pink-400' : 'text-pink-600'}`} />,
+      bgColor: isDark ? 'bg-gray-800' : 'bg-pink-50',
+      textColor: isDark ? 'text-pink-400' : 'text-pink-600',
     },
     {
       title: "Total Revenue",
       value: `KES ${salesStats.totalRevenue.toLocaleString()}`,
-      icon: <HiOutlineCurrencyDollar className="w-8 h-8 text-emerald-600" />,
-      bgColor: "bg-emerald-50",
-      textColor: "text-emerald-600",
+      icon: <HiOutlineCurrencyDollar className={`w-8 h-8 ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`} />,
+      bgColor: isDark ? 'bg-gray-800' : 'bg-emerald-50',
+      textColor: isDark ? 'text-emerald-400' : 'text-emerald-600',
     },
   ];
 
@@ -211,23 +230,50 @@ const Dashboard = () => {
     {
       title: "Add Product",
       icon: <HiOutlinePlusCircle className="w-5 h-5" />,
-      bgColor: "bg-blue-600",
-      hoverColor: "hover:bg-blue-700",
+      bgColor: isDark 
+        ? "bg-blue-500/20 border border-blue-500/30" 
+        : "bg-gradient-to-br from-blue-50 to-blue-100/80 border border-blue-200/50",
+      hoverColor: isDark 
+        ? "hover:bg-blue-500/30 hover:border-blue-500/50" 
+        : "hover:bg-gradient-to-br hover:from-blue-100 hover:to-blue-200/80 hover:border-blue-300/50",
+      textColor: isDark ? "text-blue-400" : "text-blue-600",
       link: "/products/create",
     },
     {
       title: "Create Sale",
       icon: <HiOutlineBanknotes className="w-5 h-5" />,
-      bgColor: "bg-green-600",
-      hoverColor: "hover:bg-green-700",
+      bgColor: isDark 
+        ? "bg-emerald-500/20 border border-emerald-500/30" 
+        : "bg-gradient-to-br from-emerald-50 to-emerald-100/80 border border-emerald-200/50",
+      hoverColor: isDark 
+        ? "hover:bg-emerald-500/30 hover:border-emerald-500/50" 
+        : "hover:bg-gradient-to-br hover:from-emerald-100 hover:to-emerald-200/80 hover:border-emerald-300/50",
+      textColor: isDark ? "text-emerald-400" : "text-emerald-600",
       link: "/sales/create",
     },
     {
       title: "View Reports",
       icon: <HiOutlineDocumentText className="w-5 h-5" />,
-      bgColor: "bg-indigo-600",
-      hoverColor: "hover:bg-indigo-700",
+      bgColor: isDark 
+        ? "bg-purple-500/20 border border-purple-500/30" 
+        : "bg-gradient-to-br from-purple-50 to-purple-100/80 border border-purple-200/50",
+      hoverColor: isDark 
+        ? "hover:bg-purple-500/30 hover:border-purple-500/50" 
+        : "hover:bg-gradient-to-br hover:from-purple-100 hover:to-purple-200/80 hover:border-purple-300/50",
+      textColor: isDark ? "text-purple-400" : "text-purple-600",
       link: "/reports",
+    },
+    {
+      title: "View Vendors",
+      icon: <HiOutlineUsers className="w-5 h-5" />,
+      bgColor: isDark 
+        ? "bg-indigo-500/20 border border-indigo-500/30" 
+        : "bg-gradient-to-br from-indigo-50 to-indigo-100/80 border border-indigo-200/50",
+      hoverColor: isDark 
+        ? "hover:bg-indigo-500/30 hover:border-indigo-500/50" 
+        : "hover:bg-gradient-to-br hover:from-indigo-100 hover:to-indigo-200/80 hover:border-indigo-300/50",
+      textColor: isDark ? "text-indigo-400" : "text-indigo-600",
+      link: "/vendors",
     },
   ];
 
@@ -244,19 +290,24 @@ const Dashboard = () => {
     }
   };
 
-  // Add this near your other column definitions
+
   const recentProductColumns = [
     {
       name: "ID",
       selector: row => row.id,
       sortable: true,
-      width: "80px"
+      width: "80px",
+      cell: row => (
+        <span className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+          #{row.id}
+        </span>
+      )
     },
     {
       name: "Product",
       cell: row => (
         <div className="py-1">
-          <div className="text-sm font-medium text-gray-900">
+          <div className={`text-sm font-medium ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>
             {row.product_name}
           </div>
         </div>
@@ -266,22 +317,27 @@ const Dashboard = () => {
     {
       name: "Stock",
       cell: row => (
-        <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${
-          row.stock_quantity === 0
-            ? 'bg-red-50 text-red-700 ring-1 ring-red-600/20'
-            : row.stock_quantity <= 10
-              ? 'bg-yellow-50 text-yellow-700 ring-1 ring-yellow-600/20'
-              : 'bg-green-50 text-green-700 ring-1 ring-green-600/20'
-        }`}>
-          <div 
-            className={`w-2 h-2 rounded-full ${
-              row.stock_quantity === 0
-                ? 'bg-red-500'
-                : row.stock_quantity <= 10
-                  ? 'bg-yellow-500'
-                  : 'bg-green-500'
-            }`}
-          />
+        <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold 
+          ${isDark ? (
+            row.stock_quantity === 0
+              ? 'bg-red-900/30 text-red-400 ring-1 ring-red-400/30'
+              : row.stock_quantity <= 10
+                ? 'bg-yellow-900/30 text-yellow-400 ring-1 ring-yellow-400/30'
+                : 'bg-green-900/30 text-green-400 ring-1 ring-green-400/30'
+          ) : (
+            row.stock_quantity === 0
+              ? 'bg-red-50 text-red-700 ring-1 ring-red-600/20'
+              : row.stock_quantity <= 10
+                ? 'bg-yellow-50 text-yellow-700 ring-1 ring-yellow-600/20'
+                : 'bg-green-50 text-green-700 ring-1 ring-green-600/20'
+          )}`}>
+          <div className={`w-2 h-2 rounded-full ${
+            row.stock_quantity === 0
+              ? 'bg-red-500'
+              : row.stock_quantity <= 10
+                ? 'bg-yellow-500'
+                : 'bg-green-500'
+          }`} />
           {row.stock_quantity}
         </span>
       ),
@@ -292,10 +348,10 @@ const Dashboard = () => {
       name: "Price",
       cell: row => (
         <div className="text-right">
-          <div className="text-sm font-medium text-gray-900">
+          <div className={`text-sm font-medium ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>
             KES {row.selling_price.toLocaleString()}
           </div>
-          <div className="text-xs text-gray-500">
+          <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
             Cost: KES {row.product_price.toLocaleString()}
           </div>
         </div>
@@ -307,12 +363,19 @@ const Dashboard = () => {
       name: "Status",
       cell: row => (
         <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-          row.stock_quantity === 0
-            ? 'bg-red-100 text-red-800'
-            : row.stock_quantity <= 10
-              ? 'bg-yellow-100 text-yellow-800'
-              : 'bg-green-100 text-green-800'
-        }`}>
+          isDark ? (
+            row.stock_quantity === 0
+              ? 'bg-red-900/30 text-red-400'
+              : row.stock_quantity <= 10
+                ? 'bg-yellow-900/30 text-yellow-400'
+                : 'bg-green-900/30 text-green-400'
+          ) : (
+            row.stock_quantity === 0
+              ? 'bg-red-100 text-red-800'
+              : row.stock_quantity <= 10
+                ? 'bg-yellow-100 text-yellow-800'
+                : 'bg-green-100 text-green-800'
+          )}`}>
           {row.stock_quantity === 0
             ? 'Out of Stock'
             : row.stock_quantity <= 10
@@ -326,24 +389,22 @@ const Dashboard = () => {
       name: "Actions",
       cell: row => (
         <div className="flex items-center justify-end gap-3 px-4">
-          <Link
-            to={`/products/${row.id}`}
-            className="relative group"
-          >
-            <div className="flex items-center justify-center w-8 h-8 
-                          backdrop-blur-sm bg-blue-500/10 hover:bg-blue-500/20
-                          rounded-xl hover:rounded-lg border border-blue-500/20
-                          transition-all duration-300 ease-out
-                          group-hover:shadow-lg group-hover:shadow-blue-500/20
-                          group-active:scale-95">
-              <HiOutlineInformationCircle className="w-4 h-4 text-blue-600 
-                                                  group-hover:text-blue-700
-                                                  transition-colors duration-200" />
+          <Link to={`/products/${row.id}`} className="relative group">
+            <div className={`flex items-center justify-center w-8 h-8 
+              ${isDark ? 'bg-blue-400/10 hover:bg-blue-400/20' : 'bg-blue-500/10 hover:bg-blue-500/20'}
+              rounded-xl hover:rounded-lg 
+              ${isDark ? 'border-blue-400/20' : 'border-blue-500/20'} border
+              transition-all duration-300 ease-out
+              group-hover:shadow-lg ${isDark ? 'group-hover:shadow-blue-400/20' : 'group-hover:shadow-blue-500/20'}
+              group-active:scale-95`}>
+              <HiOutlineInformationCircle className={`w-4 h-4 
+                ${isDark ? 'text-blue-400 group-hover:text-blue-300' : 'text-blue-600 group-hover:text-blue-700'}
+                transition-colors duration-200`} />
               <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1.5
-                            bg-gray-900/80 backdrop-blur-sm text-white text-xs
-                            rounded-full font-medium invisible opacity-0
-                            group-hover:visible group-hover:opacity-100
-                            transition-all duration-300 whitespace-nowrap">
+                bg-gray-900/90 backdrop-blur-sm text-white text-xs
+                rounded-full font-medium invisible opacity-0
+                group-hover:visible group-hover:opacity-100
+                transition-all duration-300 whitespace-nowrap">
                 View Details
               </div>
             </div>
@@ -401,19 +462,24 @@ const Dashboard = () => {
     }
   ];
 
-  // Add recent sales columns configuration
+
   const recentSalesColumns = [
     {
       name: "ID",
       selector: row => row.id,
       sortable: true,
-      width: "80px"
+      width: "80px",
+      cell: row => (
+        <span className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+          #{row.id}
+        </span>
+      )
     },
     {
       name: "Product ID",
       cell: row => (
         <div className="py-1">
-          <div className="text-sm font-medium text-gray-900">
+          <div className={`text-sm font-medium ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>
             #{row.pid}
           </div>
         </div>
@@ -425,7 +491,7 @@ const Dashboard = () => {
       name: "Customer",
       cell: row => (
         <div className="py-1">
-          <div className="text-sm font-medium text-gray-900">
+          <div className={`text-sm font-medium ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>
             {row.first_name}
           </div>
           <div className="text-xs text-gray-500">
@@ -527,228 +593,259 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="p-2 sm:p-4 lg:p-6 bg-gray-100 min-h-screen w-full overflow-hidden">
-      {/* Header - Improved mobile spacing */}
-      <div className="mb-3 sm:mb-5 lg:mb-8 flex flex-col xs:flex-row items-start xs:items-center gap-2">
-        <PiChartLineUpBold className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-blue-600" />
-        <div>
-          <h1 className="text-lg xs:text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
-            Inventory Dashboard
-          </h1>
-          <p className="text-xs sm:text-sm lg:text-base text-gray-600 mt-0.5">
-            Welcome back! Here's what's happening with your inventory.
-          </p>
+    <div className="relative min-h-full pb-16">
+      <div className={`${isDark ? 'bg-gray-800/50' : 'bg-white/50'} 
+        backdrop-blur-sm border-b ${isDark ? 'border-gray-700/50' : 'border-gray-200/50'}
+        sticky top-0 z-10`}>
+            {/* Success Message */}
+        {successMessage && (
+          <div className={`mb-4 p-4 rounded-lg ${
+            isDark 
+              ? 'bg-green-900/50 text-green-200 border border-green-800' 
+              : 'bg-green-50 text-green-700 border border-green-200'
+          }`}>
+            <p className="text-sm font-medium">{successMessage}</p>
+          </div>
+        )}
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-4 mt-10">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <h1 className={`text-xl sm:text-2xl font-bold 
+              ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>
+              Dashboard
+            </h1>
+            <div className="flex items-center gap-3">
+              {/* ... existing header content ... */}
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Stats Grid - Improved responsive layout */}
-      <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4 mb-3 sm:mb-5 lg:mb-8">
-        {statsDisplay.map((stat, index) => (
-          <div
-            key={index}
-            className={`${stat.bgColor} rounded-lg p-2.5 sm:p-4 lg:p-5 shadow-sm border border-gray-100 
-                    transition-all duration-300 hover:shadow-md`}
-          >
-            <div className="flex items-center justify-between mb-2 sm:mb-3">
-              <div className={`p-1.5 sm:p-2 ${stat.bgColor} rounded-lg`}>
-                <span className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4 mb-3 sm:mb-5 lg:mb-8">
+          {statsDisplay.map((stat, index) => (
+            <div
+              key={index}
+              className={`${stat.bgColor} rounded-lg p-2.5 sm:p-4 lg:p-5 
+                ${isDark 
+                  ? 'shadow-lg shadow-gray-800/50 border-gray-700' 
+                  : 'shadow-sm border-gray-100'} 
+                border transition-all duration-300 hover:shadow-md`}
+            >
+              <div className="flex items-center justify-between mb-2 sm:mb-3">
+                <div className={`p-1.5 sm:p-2 ${stat.bgColor} rounded-lg`}>
                   {stat.icon}
+                </div>
+                <span className={`text-[10px] sm:text-xs font-semibold px-1.5 py-0.5 sm:px-2 sm:py-1 
+                  rounded-full ${stat.bgColor} ${stat.textColor}`}>
+                  Last 30 days
                 </span>
               </div>
-              <span className={`text-[10px] sm:text-xs font-semibold px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full 
-                          ${stat.bgColor} ${stat.textColor}`}>
-                Last 30 days
-              </span>
+              <p className={`text-xs sm:text-sm font-medium 
+                ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+                {stat.title}
+              </p>
+              <p className={`text-base sm:text-lg lg:text-xl font-bold 
+                ${isDark ? 'text-gray-100' : 'text-gray-900'} mt-0.5 sm:mt-1`}>
+                {stat.value}
+              </p>
             </div>
-            <p className="text-xs sm:text-sm font-medium text-gray-600">{stat.title}</p>
-            <p className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 mt-0.5 sm:mt-1">
-              {stat.value}
-            </p>
-          </div>
-        ))}
-      </div>
-
-      {/* Charts Container */}
-        {/* <div className="mt-3 sm:mt-4 lg:mt-6">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200"> */}
-          <ChartsContainer />
-        {/* </div>
-      </div> */}
-
-      {/* Quick Actions - Improved mobile layout */}
-      <div className="mt-3 sm:mt-4 lg:mt-6 space-y-2 sm:space-y-3">
-        <h2 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 
-                       flex items-center gap-2">
-          <TbTruckDelivery className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />
-          Quick Actions
-        </h2>
-        <div className="grid grid-cols-1 xs:grid-cols-2 gap-2 sm:gap-3">
-          {quickActions.map((action, index) => (
-            <Link
-              key={index}
-              to={action.link}
-              className={`${action.bgColor} ${action.hoverColor} rounded-lg sm:rounded-xl 
-                       p-3 sm:p-4 lg:p-5 shadow-sm transition-all duration-300 hover:shadow-md`}
-            >
-              <div className="flex items-center gap-2 sm:gap-3 text-white">
-                <div className="p-1.5 sm:p-2 bg-white/10 rounded-lg">
-                  <span className="w-4 h-4 sm:w-5 sm:h-5">
-                    {action.icon}
-                  </span>
-                </div>
-                <span className="text-xs sm:text-sm lg:text-base font-medium">{action.title}</span>
-              </div>
-            </Link>
           ))}
         </div>
-      </div>
 
-      {/* Tables Container - Add this wrapper div */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
-        {/* Recent Products Table */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="p-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <HiOutlineCube className="w-5 h-5 text-gray-500" />
-              Recent Added Products
-            </h2>
-          </div>
-
-          {loading && <Loading text="Loading products..." />}
-          {error && (
-            <div className="p-4 text-center text-red-500">
-              {error}
-            </div>
-          )}
-          {!loading && !error && recentProducts.length === 0 && (
-            <div className="p-4 text-center text-gray-500">
-              No products found
-            </div>
-          )}
-          {!loading && !error && recentProducts.length > 0 && (
-            <div className="overflow-hidden">
-              <DataTable
-                columns={recentProductColumns}
-                data={recentProducts}
-                pagination
-                paginationPerPage={5}
-                paginationRowsPerPageOptions={[5, 10]}
-                className="rounded-lg"
-                highlightOnHover
-                pointerOnHover
-                responsive
-                dense
-                noHeader
-                persistTableHead
-                customStyles={{
-                  table: {
-                    style: {
-                      backgroundColor: 'white',
-                      borderRadius: '0.5rem',
-                    },
-                  },
-                  headRow: {
-                    style: {
-                      backgroundColor: '#F9FAFB',
-                      borderBottomWidth: '1px',
-                      borderBottomColor: '#E5E7EB',
-                    },
-                  },
-                  rows: {
-                    style: {
-                      fontSize: '0.875rem',
-                      color: '#1F2937',
-                      borderBottomWidth: '1px',
-                      borderBottomColor: '#E5E7EB',
-                      '&:hover': {
-                        backgroundColor: '#F3F4F6',
-                      },
-                    },
-                  },
-                  pagination: {
-                    style: {
-                      borderTopWidth: '1px',
-                      borderTopColor: '#E5E7EB',
-                    },
-                  },
-                }}
-              />
-            </div>
-          )}
+        <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} 
+          rounded-lg shadow-sm border`}>
+          <ChartsContainer isDark={isDark} />
         </div>
 
-        {/* Recent Sales Table */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="p-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-              Recent Sales
-            </h2>
+        <div className="mt-3 sm:mt-4 lg:mt-6 space-y-2 sm:space-y-3">
+          <h2 className={`text-sm sm:text-base lg:text-lg font-semibold 
+            ${isDark ? 'text-gray-100' : 'text-gray-900'}
+            flex items-center gap-2`}>
+            <TbTruckDelivery className={`w-4 h-4 sm:w-5 sm:h-5 
+              ${isDark ? 'text-gray-300' : 'text-gray-700'}`} />
+            Quick Actions
+          </h2>
+          <div className="grid grid-cols-1 xs:grid-cols-2 gap-2 sm:gap-3">
+            {quickActions.map((action, index) => (
+              <Link
+                key={index}
+                to={action.link}
+                className={`${action.bgColor} ${action.hoverColor} 
+                  rounded-lg sm:rounded-xl 
+                  p-3 sm:p-4 lg:p-5 
+                  shadow-sm transition-all duration-300 
+                  hover:shadow-md hover:scale-[1.02]
+                  backdrop-blur-sm
+                  ${isDark ? 'shadow-gray-900/30' : 'shadow-gray-200/50'}`}
+              >
+                <div className={`flex items-center gap-2 sm:gap-3 ${action.textColor}`}>
+                  <div className={`p-1.5 sm:p-2 rounded-lg 
+                    ${isDark ? 'bg-white/5' : 'bg-white/80'} 
+                    backdrop-blur-sm`}>
+                    <span className="w-4 h-4 sm:w-5 sm:h-5">
+                      {action.icon}
+                    </span>
+                  </div>
+                  <span className="text-xs sm:text-sm lg:text-base font-medium">
+                    {action.title}
+                  </span>
+                </div>
+              </Link>
+            ))}
           </div>
+        </div>
 
-          {loading && <Loading text="Loading sales..." />}
-          {error && (
-            <div className="p-4 text-center text-red-500">
-              {error}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">
+          <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} 
+            rounded-lg shadow-sm border`}>
+            <div className={`p-4 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+              <h2 className={`text-lg font-semibold ${isDark ? 'text-gray-100' : 'text-gray-900'} 
+                flex items-center gap-2`}>
+                <HiOutlineCube className={`w-5 h-5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+                Recent Added Products
+              </h2>
             </div>
-          )}
-          {!loading && !error && recentSales.length === 0 && (
-            <div className="p-4 text-center text-gray-500">
-              No sales found
-            </div>
-          )}
-          {!loading && !error && recentSales.length > 0 && (
-            <div className="overflow-hidden">
-              <DataTable
-                columns={recentSalesColumns}
-                data={recentSales}
-                pagination
-                paginationPerPage={5}
-                paginationRowsPerPageOptions={[5, 10]}
-                className="rounded-lg"
-                highlightOnHover
-                pointerOnHover
-                responsive
-                dense
-                noHeader
-                persistTableHead
-                customStyles={{
-                  table: {
-                    style: {
-                      backgroundColor: 'white',
-                      borderRadius: '0.5rem',
-                    },
-                  },
-                  headRow: {
-                    style: {
-                      backgroundColor: '#F9FAFB',
-                      borderBottomWidth: '1px',
-                      borderBottomColor: '#E5E7EB',
-                    },
-                  },
-                  rows: {
-                    style: {
-                      fontSize: '0.875rem',
-                      color: '#1F2937',
-                      borderBottomWidth: '1px',
-                      borderBottomColor: '#E5E7EB',
-                      '&:hover': {
-                        backgroundColor: '#F3F4F6',
+
+            {loading && <Loading text="Loading products..." />}
+            {error && (
+              <div className={`p-4 text-center ${isDark ? 'text-red-400' : 'text-red-500'}`}>
+                {error}
+              </div>
+            )}
+            {!loading && !error && recentProducts.length === 0 && (
+              <div className={`p-4 text-center ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                No products found
+              </div>
+            )}
+            {!loading && !error && recentProducts.length > 0 && (
+              <div className="overflow-hidden">
+                <DataTable
+                  columns={recentProductColumns}
+                  data={recentProducts}
+                  pagination
+                  paginationPerPage={5}
+                  paginationRowsPerPageOptions={[5, 10]}
+                  className="rounded-lg"
+                  highlightOnHover
+                  pointerOnHover
+                  responsive
+                  dense
+                  noHeader
+                  persistTableHead
+                  theme={isDark ? 'dark' : 'light'}
+                  customStyles={{
+                    table: {
+                      style: {
+                        backgroundColor: isDark ? '#1F2937' : 'white',
+                        borderRadius: '0.5rem',
                       },
                     },
-                  },
-                  pagination: {
-                    style: {
-                      borderTopWidth: '1px',
-                      borderTopColor: '#E5E7EB',
+                    headRow: {
+                      style: {
+                        backgroundColor: isDark ? '#374151' : '#F9FAFB',
+                        borderBottomWidth: '1px',
+                        borderBottomColor: isDark ? '#4B5563' : '#E5E7EB',
+                      },
                     },
-                  },
-                }}
-              />
+                    rows: {
+                      style: {
+                        fontSize: '0.875rem',
+                        color: isDark ? '#D1D5DB' : '#1F2937',
+                        borderBottomWidth: '1px',
+                        borderBottomColor: isDark ? '#4B5563' : '#E5E7EB',
+                        '&:hover': {
+                          backgroundColor: isDark ? '#374151' : '#F3F4F6',
+                        },
+                      },
+                    },
+                    pagination: {
+                      style: {
+                        backgroundColor: isDark ? '#1F2937' : 'white',
+                        borderTopWidth: '1px',
+                        borderTopColor: isDark ? '#4B5563' : '#E5E7EB',
+                        color: isDark ? '#D1D5DB' : '#1F2937',
+                      },
+                    },
+                  }}
+                />
+              </div>
+            )}
+          </div>
+
+          <div className={`${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} 
+            rounded-lg shadow-sm border`}>
+            <div className={`p-4 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+              <h2 className={`text-lg font-semibold ${isDark ? 'text-gray-100' : 'text-gray-900'} 
+                flex items-center gap-2`}>
+                <HiOutlineShoppingCart className={`w-5 h-5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} />
+                Recent Sales
+              </h2>
             </div>
-          )}
+
+            {loading && <Loading text="Loading sales..." />}
+            {error && (
+              <div className={`p-4 text-center ${isDark ? 'text-red-400' : 'text-red-500'}`}>
+                {error}
+              </div>
+            )}
+            {!loading && !error && recentSales.length === 0 && (
+              <div className={`p-4 text-center ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                No sales found
+              </div>
+            )}
+            {!loading && !error && recentSales.length > 0 && (
+              <div className="overflow-hidden">
+                <DataTable
+                  columns={recentSalesColumns}
+                  data={recentSales}
+                  pagination
+                  paginationPerPage={5}
+                  paginationRowsPerPageOptions={[5, 10]}
+                  className="rounded-lg"
+                  highlightOnHover
+                  pointerOnHover
+                  responsive
+                  dense
+                  noHeader
+                  persistTableHead
+                  theme={isDark ? 'dark' : 'light'}
+                  customStyles={{
+                    table: {
+                      style: {
+                        backgroundColor: isDark ? '#1F2937' : 'white',
+                        borderRadius: '0.5rem',
+                      },
+                    },
+                    headRow: {
+                      style: {
+                        backgroundColor: isDark ? '#374151' : '#F9FAFB',
+                        borderBottomWidth: '1px',
+                        borderBottomColor: isDark ? '#4B5563' : '#E5E7EB',
+                      },
+                    },
+                    rows: {
+                      style: {
+                        fontSize: '0.875rem',
+                        color: isDark ? '#D1D5DB' : '#1F2937',
+                        borderBottomWidth: '1px',
+                        borderBottomColor: isDark ? '#4B5563' : '#E5E7EB',
+                        '&:hover': {
+                          backgroundColor: isDark ? '#374151' : '#F3F4F6',
+                        },
+                      },
+                    },
+                    pagination: {
+                      style: {
+                        backgroundColor: isDark ? '#1F2937' : 'white',
+                        borderTopWidth: '1px',
+                        borderTopColor: '#E5E7EB',
+                      },
+                    },
+                  }}
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

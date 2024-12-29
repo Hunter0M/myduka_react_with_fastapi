@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
+import { FiUser, FiMail, FiPhone, FiLock, FiLoader } from 'react-icons/fi';
 import api from '../../services/axiosConfig';
-import AuthLayout from '../../components/styles/AuthLayout';
 
 const RegisterPage = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { isDark } = useTheme();
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -114,115 +116,219 @@ const RegisterPage = () => {
     }
   };
 
-  const inputClasses = "appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm";
-
   return (
-    <AuthLayout>
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Create your account
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Or{' '}
-          <button 
-            onClick={() => navigate('/login')}
-            className="font-medium text-indigo-600 hover:text-indigo-500 transition-colors duration-200"
-          >
-            sign in to your existing account
-          </button>
-        </p>
+    <div className="flex items-center justify-center py-8 px-4 sm:px-6 lg:px-8 relative">
+      {/* Decorative Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className={`absolute -top-24 -right-24 w-48 h-48 rounded-full blur-3xl opacity-20
+          ${isDark ? 'bg-blue-600' : 'bg-blue-500'}`} />
+        <div className={`absolute -bottom-24 -left-24 w-48 h-48 rounded-full blur-3xl opacity-20
+          ${isDark ? 'bg-purple-600' : 'bg-purple-500'}`} />
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow-xl shadow-indigo-100/50 sm:rounded-lg sm:px-10 
-          border border-gray-100">
+      <div className="relative w-full max-w-md mx-auto px-4">
+        {/* Logo and Title */}
+        <div className="text-center">
+          <div className="flex justify-center">
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center
+              ${isDark ? 'bg-blue-600' : 'bg-blue-500'}`}>
+              <span className="text-white text-2xl font-bold">IC</span>
+            </div>
+          </div>
+          <h2 className={`mt-6 text-3xl font-bold tracking-tight
+            ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            Create your account
+          </h2>
+          <p className={`mt-2 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+            Or{' '}
+            <Link to="/login" 
+              className={`font-medium transition-colors duration-200
+              ${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-500'}`}>
+              sign in to your existing account
+            </Link>
+          </p>
+        </div>
+
+        {/* Form Container */}
+        <div className={`mt-8 p-6 sm:p-8 shadow-xl rounded-xl
+          ${isDark ? 'bg-gray-800/50 backdrop-blur-sm' : 'bg-white'}`}>
+          
+          {/* Alert Messages */}
           {message && (
-            <div className={`mb-6 px-4 py-3 rounded-lg relative ${
-              messageType === 'error' ? 'bg-red-50 border border-red-200 text-red-700' :
-              messageType === 'success' ? 'bg-green-50 border border-green-200 text-green-700' :
-              'bg-blue-50 border border-blue-200 text-blue-700'
-            }`} role="alert">
-              <span className="block text-sm font-medium">{message}</span>
+            <div className={`mb-6 p-4 rounded-lg ${
+              messageType === 'error' 
+                ? isDark 
+                  ? 'bg-red-900/50 text-red-200 border border-red-800'
+                  : 'bg-red-50 text-red-700 border border-red-200'
+                : messageType === 'success'
+                  ? isDark
+                    ? 'bg-green-900/50 text-green-200 border border-green-800'
+                    : 'bg-green-50 text-green-700 border border-green-200'
+                  : isDark
+                    ? 'bg-blue-900/50 text-blue-200 border border-blue-800'
+                    : 'bg-blue-50 text-blue-700 border border-blue-200'
+            }`}>
+              <p className="text-sm font-medium">{message}</p>
             </div>
           )}
 
+          {/* Registration Form */}
           <form className="space-y-6" onSubmit={handleSubmit}>
-            <div className="space-y-1">
-              <div className="grid grid-cols-1 gap-y-2">
-                <div className="grid grid-cols-2 gap-x-2">
+            {/* Names */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className={`block text-sm font-medium mb-2
+                  ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
+                  First Name
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FiUser className={isDark ? 'text-gray-400' : 'text-gray-500'} />
+                  </div>
                   <input
                     name="first_name"
                     type="text"
                     required
-                    className="appearance-none rounded-md relative block w-full px-3 py-2 border 
-                      border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none 
-                      focus:ring-2 focus:ring-indigo-500 focus:border-transparent
-                      transition-colors duration-200"
+                    className={`block w-full pl-10 pr-3 py-2.5 rounded-lg text-sm
+                      transition-colors duration-200
+                      ${isDark 
+                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                        : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500'}
+                      border focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                     placeholder="First Name"
                     value={formData.first_name}
                     onChange={handleChange}
                   />
+                </div>
+              </div>
+              <div>
+                <label className={`block text-sm font-medium mb-2
+                  ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
+                  Last Name
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <FiUser className={isDark ? 'text-gray-400' : 'text-gray-500'} />
+                  </div>
                   <input
                     name="last_name"
                     type="text"
                     required
-                    className="appearance-none rounded-md relative block w-full px-3 py-2 border 
-                      border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none 
-                      focus:ring-2 focus:ring-indigo-500 focus:border-transparent
-                      transition-colors duration-200"
+                    className={`block w-full pl-10 pr-3 py-2.5 rounded-lg text-sm
+                      transition-colors duration-200
+                      ${isDark 
+                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                        : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500'}
+                      border focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                     placeholder="Last Name"
                     value={formData.last_name}
                     onChange={handleChange}
                   />
                 </div>
+              </div>
+            </div>
 
+            {/* Email */}
+            <div>
+              <label className={`block text-sm font-medium mb-2
+                ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
+                Email address
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FiMail className={isDark ? 'text-gray-400' : 'text-gray-500'} />
+                </div>
                 <input
                   name="email"
                   type="email"
                   required
-                  className="appearance-none rounded-md relative block w-full px-3 py-2 border 
-                    border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none 
-                    focus:ring-2 focus:ring-indigo-500 focus:border-transparent
-                    transition-colors duration-200"
+                  className={`block w-full pl-10 pr-3 py-2.5 rounded-lg text-sm
+                    transition-colors duration-200
+                    ${isDark 
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                      : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500'}
+                    border focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                   placeholder="Email address"
                   value={formData.email}
                   onChange={handleChange}
                 />
+              </div>
+            </div>
 
+            {/* Phone */}
+            <div>
+              <label className={`block text-sm font-medium mb-2
+                ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
+                Phone number
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FiPhone className={isDark ? 'text-gray-400' : 'text-gray-500'} />
+                </div>
                 <input
                   name="phone"
                   type="tel"
                   required
-                  className="appearance-none rounded-md relative block w-full px-3 py-2 border 
-                    border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none 
-                    focus:ring-2 focus:ring-indigo-500 focus:border-transparent
-                    transition-colors duration-200"
+                  className={`block w-full pl-10 pr-3 py-2.5 rounded-lg text-sm
+                    transition-colors duration-200
+                    ${isDark 
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                      : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500'}
+                    border focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                   placeholder="Phone number"
                   value={formData.phone}
                   onChange={handleChange}
                 />
+              </div>
+            </div>
 
+            {/* Password */}
+            <div>
+              <label className={`block text-sm font-medium mb-2
+                ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
+                Password
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FiLock className={isDark ? 'text-gray-400' : 'text-gray-500'} />
+                </div>
                 <input
                   name="password"
                   type="password"
                   required
-                  className="appearance-none rounded-md relative block w-full px-3 py-2 border 
-                    border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none 
-                    focus:ring-2 focus:ring-indigo-500 focus:border-transparent
-                    transition-colors duration-200"
+                  className={`block w-full pl-10 pr-3 py-2.5 rounded-lg text-sm
+                    transition-colors duration-200
+                    ${isDark 
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                      : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500'}
+                    border focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                   placeholder="Password"
                   value={formData.password}
                   onChange={handleChange}
                 />
+              </div>
+            </div>
 
+            {/* Confirm Password */}
+            <div>
+              <label className={`block text-sm font-medium mb-2
+                ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
+                Confirm Password
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FiLock className={isDark ? 'text-gray-400' : 'text-gray-500'} />
+                </div>
                 <input
                   name="confirm_password"
                   type="password"
                   required
-                  className="appearance-none rounded-md relative block w-full px-3 py-2 border 
-                    border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none 
-                    focus:ring-2 focus:ring-indigo-500 focus:border-transparent
-                    transition-colors duration-200"
+                  className={`block w-full pl-10 pr-3 py-2.5 rounded-lg text-sm
+                    transition-colors duration-200
+                    ${isDark 
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                      : 'bg-gray-50 border-gray-300 text-gray-900 placeholder-gray-500'}
+                    border focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
                   placeholder="Confirm Password"
                   value={formData.confirm_password}
                   onChange={handleChange}
@@ -230,44 +336,46 @@ const RegisterPage = () => {
               </div>
             </div>
 
-            <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="group relative w-full flex justify-center py-2.5 px-4 border 
-                  border-transparent text-sm font-medium rounded-md text-white 
-                  bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 
-                  focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50
-                  transition-all duration-200 ease-in-out
-                  transform hover:scale-[1.02]"
-              >
-                {loading ? (
-                  <span className="flex items-center">
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Registering...
-                  </span>
-                ) : (
-                  'Register'
-                )}
-              </button>
-            </div>
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className={`w-full flex justify-center items-center py-2.5 px-4 rounded-lg
+                text-sm font-medium text-white transition-all duration-200
+                ${isDark
+                  ? 'bg-blue-600 hover:bg-blue-700'
+                  : 'bg-blue-500 hover:bg-blue-600'}
+                disabled:opacity-50 transform hover:scale-[1.02]`}
+            >
+              {loading ? (
+                <span className="flex items-center">
+                  <FiLoader className="animate-spin -ml-1 mr-2 h-4 w-4" />
+                  Registering...
+                </span>
+              ) : (
+                'Register'
+              )}
+            </button>
 
-            <div className="text-center">
-              <button
-                type="button"
-                onClick={() => navigate('/login')}
-                className="text-sm text-gray-600 hover:text-indigo-500 transition-colors duration-200"
+            {/* Login Link */}
+            <p className="text-center">
+              <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+                Already have an account?{' '}
+              </span>
+              <Link
+                to="/login"
+                className={`font-medium transition-colors duration-200
+                  ${isDark 
+                    ? 'text-blue-400 hover:text-blue-300' 
+                    : 'text-blue-600 hover:text-blue-500'}`}
               >
-                Already have an account? Sign in
-              </button>
-            </div>
+                Sign in
+              </Link>
+            </p>
           </form>
         </div>
       </div>
-    </AuthLayout>
+    </div>
   );
 };
 

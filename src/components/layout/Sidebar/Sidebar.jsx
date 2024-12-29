@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { useTheme } from '../../../context/ThemeContext';
-import { FiUpload, FiList, FiPackage, FiShoppingCart, FiBarChart2, FiHome, FiX, FiLayout } from 'react-icons/fi';
+import { FiUpload, FiList, FiPackage, FiShoppingCart, FiBarChart2, FiHome, FiX, FiLayout, FiUsers } from 'react-icons/fi';
 
 const Sidebar = ({ isOpen, onClose }) => {
   const location = useLocation();
@@ -24,6 +24,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         { name: 'Home', href: '/', icon: <FiHome className="w-5 h-5" /> },
         { name: 'Dashboard', href: '/dashboard', icon: <FiLayout className="w-5 h-5" /> },
         { name: 'Products', href: '/products', icon: <FiPackage className="w-5 h-5" /> },
+        { name: 'Vendors', href: '/vendors', icon: <FiUsers className="w-5 h-5" /> },
         { name: 'Sales', href: '/sales', icon: <FiShoppingCart className="w-5 h-5" /> },
         { name: 'Reports', href: '/reports', icon: <FiBarChart2 className="w-5 h-5" /> },
       ]

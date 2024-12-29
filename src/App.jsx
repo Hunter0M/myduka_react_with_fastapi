@@ -15,55 +15,78 @@ import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/layout/Header/ProtectedRoute";
 import HomePage from "./pages/home/HomePage";
 import Footer from "./components/layout/Footer/Footer";
-import ErrorPage from './pages/Error/ErrorPage';
-import ImportProducts from './components/import/ImportProducts';
-import ImportHistory from './components/import/ImportHistory';
+import ErrorPage from "./pages/Error/ErrorPage";
+import ImportProducts from "./components/import/ImportProducts";
+import ImportHistory from "./components/import/ImportHistory";
 import ProfilePage from "./pages/profile/ProfilePage";
-import UpdateSale from './pages/sales/UpdateSale';
-
+import UpdateSale from "./pages/sales/UpdateSale";
+import Vendors from "./pages/vendors/Vendors";
+import VendorForm from "./pages/vendors/VendorForm";
+import VendorDetails from "./pages/vendors/VendorDetails";
+import EditVendor from './pages/vendors/EditVendor';
+// import AuthLayout from "./components/styles/AuthLayout";
 
 function App() {
   return (
-    <AuthProvider>
-      <ThemeProvider>
-        
-          <div className="flex flex-col min-h-screen">
-            <main className="flex-grow">
-            <Routes>
-              <Route path="/" element={<Layout />}>
-                {/* Public Routes */}
-                <Route path="/" index element={<HomePage />} />
-                <Route path="/login" element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
+    <div className="min-h-screen">
+      <AuthProvider>
+        <ThemeProvider>
+          <Routes>
+          <Route element={<ProtectedRoute />}>
+          
+          <Route path="/products" element={<Product />} />
+                {/* Product Routes */}
+                <Route path="/products/:id" element={<ProductDetails />} />
+                {/* Sales Routes */}
+                <Route path="/sales" element={<Sales />} />
 
-                {/* Protected Routes */}
-                <Route element={<ProtectedRoute />}>
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/profile" element={<ProfilePage />} />
-                  <Route path="products">
-                    <Route index element={<Product />} />
-                    <Route path="create" element={<CreateProduct />} />
-                    <Route path="edit/:id" element={<UpdateProduct />} />
-                    <Route path=":id" element={<ProductDetails />} />
-                  </Route>
-                  <Route path="reports" element={<Reports />} />
-                  <Route path="sales">
-                    <Route index element={<Sales />} />
-                    <Route path="create" element={<CreateSale />} />
-                    <Route path="edit/:id" element={<UpdateSale />} />
-                  </Route>
-                  
-                </Route>
-                <Route path="*" element={<ErrorPage />} />
-                <Route path="/import" element={<ImportProducts />} />
-                <Route path="/import/history" element={<ImportHistory />} />
+                {/* Vendors Routes */}
+                <Route path="/vendors" element={<Vendors />} />
+                <Route path="/vendors/create" element={<VendorForm />} />
+                <Route path="/vendors/:id" element={<VendorDetails />} />
+                <Route path="/vendors/edit/:id" element={<EditVendor />} />
+
+          </Route>
+          
+
+
+            {/* Wrap routes that need the layout in a Layout route */}
+            <Route element={<Layout />}>
+              {/* Public Routes */}
+              <Route path="/" index element={<HomePage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+
+              {/* Protected Routes */}
+              <Route element={<ProtectedRoute />}>
+
+                {/* Product Routes */}
+                <Route path="/products/create" element={<CreateProduct />} />
+                <Route path="/products/edit/:id" element={<UpdateProduct />} />
+
+                {/* Sales Routes */}
+                <Route path="/sales/create" element={<CreateSale />} />
+                <Route path="/sales/:id/edit" element={<UpdateSale />} />
+                
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/profile" element={<ProfilePage />} />
+                
+                <Route path="/reports" element={<Reports />} />
+                
+                
               </Route>
-            </Routes>
-            <Footer />
-            </main>
-          </div>
-      </ThemeProvider>
-    </AuthProvider>
+
+              {/* Import Routes */}
+              <Route path="/import" element={<ImportProducts />} />
+              <Route path="/import/history" element={<ImportHistory />} />
+
+              {/* Error Route */}
+              <Route path="*" element={<ErrorPage />} />
+            </Route>
+          </Routes>
+        </ThemeProvider>
+      </AuthProvider>
+    </div>
   );
 }
 

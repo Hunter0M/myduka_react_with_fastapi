@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { BarChart } from '@mui/x-charts/BarChart';
+import { useTheme } from '../../context/ThemeContext';
 import axios from 'axios';
 import { 
   FaChartBar, 
@@ -10,6 +11,7 @@ import {
 } from 'react-icons/fa';
 
 const ProductPerformanceChart = () => {
+  const { isDark } = useTheme();
   const [productNames, setProductNames] = useState([]);
   const [salesData, setSalesData] = useState([]);
   const [profitData, setProfitData] = useState([]);
@@ -117,25 +119,48 @@ const ProductPerformanceChart = () => {
   };
 
   return (
-    <div className="h-full flex flex-col bg-white rounded-xl shadow-sm">
+    <div className={`h-full flex flex-col rounded-xl 
+      ${isDark ? 'bg-gray-800/40 backdrop-blur-sm border border-gray-700/50' : 'bg-white'}
+      transition-colors duration-300`}>
       {/* Chart Header */}
-      <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-3 
-                    p-3 xs:p-4 sm:p-5 border-b border-gray-100">
+      <div className={`flex flex-col xs:flex-row items-start xs:items-center justify-between gap-3 
+        p-3 xs:p-4 sm:p-5 border-b 
+        ${isDark ? 'border-gray-700/50' : 'border-gray-100'}
+        transition-colors duration-300`}>
         <div className="flex items-center gap-2">
-          <div className="p-1.5 xs:p-2 bg-gradient-to-br from-blue-500/20 to-blue-500/10 rounded-lg">
-            <FaChartBar className="w-3.5 h-3.5 xs:w-4 xs:h-4 text-blue-600" />
+          <div className={`p-1.5 xs:p-2 rounded-lg
+            ${isDark 
+              ? 'bg-gradient-to-br from-blue-500/10 via-blue-400/5 to-blue-500/10 border border-blue-500/20' 
+              : 'bg-gradient-to-br from-blue-500/20 to-blue-500/10'}
+            transition-all duration-300`}>
+            <FaChartBar className={`w-3.5 h-3.5 xs:w-4 xs:h-4 
+              ${isDark ? 'text-blue-400' : 'text-blue-600'}
+              transition-colors duration-300`} />
           </div>
           <div>
-            <h3 className="text-sm xs:text-base font-semibold text-gray-800">Product Performance</h3>
-            <p className="text-xs text-gray-500 mt-0.5">Sales and profit by product</p>
+            <h3 className={`text-sm xs:text-base font-semibold 
+              ${isDark ? 'text-gray-100' : 'text-gray-800'}
+              transition-colors duration-300`}>
+              Product Performance
+            </h3>
+            <p className={`text-xs 
+              ${isDark ? 'text-gray-400' : 'text-gray-500'} 
+              transition-colors duration-300 mt-0.5`}>
+              Sales and profit by product
+            </p>
           </div>
         </div>
 
         <select
           value={displayCount}
           onChange={(e) => setDisplayCount(Number(e.target.value))}
-          className="px-2 py-1 text-xs sm:text-sm border border-gray-200 
-                   rounded-lg bg-white text-gray-700"
+          className={`px-2 py-1 text-xs sm:text-sm border rounded-lg
+            ${isDark 
+              ? 'bg-gray-700/50 border-gray-600/50 text-gray-200 hover:bg-gray-700/70' 
+              : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}
+            focus:outline-none focus:ring-2 
+            ${isDark ? 'focus:ring-blue-500/30' : 'focus:ring-blue-500/50'}
+            transition-all duration-300`}
         >
           <option value={5}>Top 5</option>
           <option value={10}>Top 10</option>
@@ -144,15 +169,22 @@ const ProductPerformanceChart = () => {
       </div>
 
       {/* Chart Area */}
-      <div ref={chartContainerRef} className="flex-1 p-3 xs:p-4 sm:p-5">
+      <div ref={chartContainerRef} 
+           className={`flex-1 p-3 xs:p-4 sm:p-5 
+             ${isDark ? 'bg-gray-800/20' : 'bg-white/50'}
+             transition-colors duration-300`}>
         {loading ? (
           <div className="h-full flex items-center justify-center">
-            <FaSpinner className="w-6 h-6 text-blue-500 animate-spin" />
+            <FaSpinner className={`w-6 h-6 
+              ${isDark ? 'text-blue-400' : 'text-blue-500'} 
+              animate-spin transition-colors duration-300`} />
           </div>
         ) : error ? (
-          <div className="h-full flex items-center justify-center text-red-500">
-            <FaExclamationTriangle className="w-5 h-5 mr-2" />
-            <span>{error}</span>
+          <div className={`h-full flex items-center justify-center gap-2 
+            ${isDark ? 'text-red-400' : 'text-red-500'}
+            transition-colors duration-300`}>
+            <FaExclamationTriangle className="w-5 h-5" />
+            <span className="text-sm">{error}</span>
           </div>
         ) : (
           <BarChart
@@ -160,24 +192,21 @@ const ProductPerformanceChart = () => {
               scaleType: 'band', 
               data: productNames,
               tickLabelStyle: {
-                angle: window.innerWidth < 360 ? 75 :
-                       window.innerWidth < 640 ? 60 : 45,
+                angle: window.innerWidth < 360 ? 75 : window.innerWidth < 640 ? 60 : 45,
                 textAnchor: 'start',
-                fontSize: window.innerWidth < 360 ? 8 :
-                          window.innerWidth < 480 ? 10 : 12,
+                fontSize: window.innerWidth < 360 ? 8 : window.innerWidth < 480 ? 10 : 12,
                 fontWeight: 500,
-                fill: '#374151',
+                fill: isDark ? '#D1D5DB' : '#374151',
               },
               tickSize: 0,
               borderWidth: 0,
-              tickMargin: window.innerWidth < 480 ? 2 : 
-                         window.innerWidth < 640 ? 4 : 8,
+              tickMargin: window.innerWidth < 480 ? 2 : window.innerWidth < 640 ? 4 : 8,
             }]}
             series={[
               { 
                 data: salesData,
                 label: 'Sales',
-                color: 'rgb(25, 118, 210)',
+                color: isDark ? 'rgb(59, 130, 246)' : 'rgb(25, 118, 210)', // Brighter blue for dark mode
                 valueFormatter: (value) => new Intl.NumberFormat('en-KE', {
                   style: 'currency',
                   currency: 'KES',
@@ -187,7 +216,7 @@ const ProductPerformanceChart = () => {
               { 
                 data: profitData,
                 label: 'Profit',
-                color: 'rgb(156, 39, 176)',
+                color: isDark ? 'rgb(167, 139, 250)' : 'rgb(156, 39, 176)', // Brighter purple for dark mode
                 valueFormatter: (value) => new Intl.NumberFormat('en-KE', {
                   style: 'currency',
                   currency: 'KES',
@@ -212,16 +241,48 @@ const ProductPerformanceChart = () => {
                 },
                 padding: window.innerWidth < 480 ? 5 : window.innerWidth < 640 ? 10 : 20,
                 labelStyle: {
-                  fill: '#4B5563',
+                  fill: isDark ? '#E5E7EB' : '#4B5563',
                   fontSize: window.innerWidth < 480 ? 9 : window.innerWidth < 640 ? 10 : 12,
                   fontWeight: 500
                 }
+              }
+            }}
+            yAxis={[{
+              tickLabelStyle: {
+                fill: isDark ? '#E5E7EB' : '#374151',
+                fontSize: 12,
+                fontWeight: 500
+              }
+            }]}
+            sx={{
+              '.MuiChartsAxis-line': {
+                stroke: isDark ? '#4B5563' : '#E5E7EB',
+                strokeWidth: isDark ? 0.5 : 1,
               },
-              bars: {
-                style: {
-                  borderTopLeftRadius: window.innerWidth < 480 ? 2 : 4,
-                  borderTopRightRadius: window.innerWidth < 480 ? 2 : 4
-                }
+              '.MuiChartsAxis-tick': {
+                stroke: isDark ? '#4B5563' : '#E5E7EB',
+                strokeWidth: isDark ? 0.5 : 1,
+              },
+              '.MuiChartsAxis-tickLabel': {
+                fill: isDark ? '#E5E7EB' : '#374151',
+              },
+              '.MuiChartsAxis-grid': {
+                stroke: isDark ? 'rgba(75, 85, 99, 0.2)' : '#F3F4F6',
+                strokeDasharray: isDark ? '2 2' : 'none',
+              },
+              // Enhanced tooltip styling
+              '.MuiTooltip-tooltip': {
+                backgroundColor: isDark ? 'rgba(17, 24, 39, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(8px)',
+                border: `1px solid ${isDark ? 'rgba(75, 85, 99, 0.3)' : '#E5E7EB'}`,
+                color: isDark ? '#F3F4F6' : '#111827',
+                boxShadow: isDark 
+                  ? '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2)' 
+                  : '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                borderRadius: '0.5rem',
+                padding: '0.5rem 0.75rem',
+                fontSize: '0.875rem',
+                fontWeight: 500
               }
             }}
           />

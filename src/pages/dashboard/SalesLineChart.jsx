@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { LineChart } from '@mui/x-charts/LineChart';
+import { useTheme } from '../../context/ThemeContext';
 import axios from 'axios';
 import { 
   FaChartLine, 
@@ -10,6 +11,7 @@ import {
 } from 'react-icons/fa';
 
 const SalesLineChart = () => {
+  const { isDark } = useTheme();
   const [salesData, setSalesData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -163,31 +165,56 @@ const SalesLineChart = () => {
   };
 
   return (
-    <div className="h-full flex flex-col bg-white rounded-xl shadow-sm">
+    <div className={`h-full flex flex-col rounded-xl 
+      ${isDark ? 'bg-gray-800/40 backdrop-blur-sm border border-gray-700/50' : 'bg-white'}
+      transition-colors duration-300`}>
       {/* Chart Header */}
-      <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-3 
-                    p-3 xs:p-4 sm:p-5 border-b border-gray-100">
+      <div className={`flex flex-col xs:flex-row items-start xs:items-center justify-between gap-3 
+        p-3 xs:p-4 sm:p-5 border-b 
+        ${isDark ? 'border-gray-700/50' : 'border-gray-100'}
+        transition-colors duration-300`}>
         <div className="flex items-center gap-2">
-          <div className="p-1.5 xs:p-2 bg-gradient-to-br from-blue-500/20 to-blue-500/10 rounded-lg">
-            <FaChartLine className="w-3.5 h-3.5 xs:w-4 xs:h-4 text-blue-600" />
+          <div className={`p-1.5 xs:p-2 rounded-lg
+            ${isDark 
+              ? 'bg-gradient-to-br from-emerald-500/10 via-emerald-400/5 to-emerald-500/10 border border-emerald-500/20' 
+              : 'bg-gradient-to-br from-emerald-500/20 to-emerald-500/10'}
+            transition-all duration-300`}>
+            <FaChartLine className={`w-3.5 h-3.5 xs:w-4 xs:h-4 
+              ${isDark ? 'text-emerald-400' : 'text-emerald-600'}
+              transition-colors duration-300`} />
           </div>
           <div>
-            <h3 className="text-sm xs:text-base font-semibold text-gray-800">Daily Sales Summary</h3>
-            <p className="text-xs text-gray-500 mt-0.5">Total sales grouped by date</p>
+            <h3 className={`text-sm xs:text-base font-semibold 
+              ${isDark ? 'text-gray-100' : 'text-gray-800'}
+              transition-colors duration-300`}>
+              Daily Sales Summary
+            </h3>
+            <p className={`text-xs 
+              ${isDark ? 'text-gray-400' : 'text-gray-500'} 
+              transition-colors duration-300 mt-0.5`}>
+              Total sales grouped by date
+            </p>
           </div>
         </div>
       </div>
 
       {/* Chart Area */}
-      <div ref={chartContainerRef} className="flex-1 p-3 xs:p-4 sm:p-5">
+      <div ref={chartContainerRef} 
+           className={`flex-1 p-3 xs:p-4 sm:p-5 
+             ${isDark ? 'bg-gray-800/20' : 'bg-white/50'}
+             transition-colors duration-300`}>
         {loading ? (
           <div className="h-full flex items-center justify-center">
-            <FaSpinner className="w-6 h-6 text-blue-500 animate-spin" />
+            <FaSpinner className={`w-6 h-6 
+              ${isDark ? 'text-emerald-400' : 'text-emerald-500'} 
+              animate-spin transition-colors duration-300`} />
           </div>
         ) : error ? (
-          <div className="h-full flex items-center justify-center text-red-500">
-            <FaExclamationTriangle className="w-5 h-5 mr-2" />
-            <span>{error}</span>
+          <div className={`h-full flex items-center justify-center gap-2 
+            ${isDark ? 'text-red-400' : 'text-red-500'}
+            transition-colors duration-300`}>
+            <FaExclamationTriangle className="w-5 h-5" />
+            <span className="text-sm">{error}</span>
           </div>
         ) : (
           <LineChart
@@ -197,7 +224,7 @@ const SalesLineChart = () => {
               tickLabelStyle: {
                 fontSize: 12,
                 fontWeight: 500,
-                fill: '#374151'
+                fill: isDark ? '#E5E7EB' : '#374151'
               },
               valueFormatter: (value) => {
                 const date = new Date(value);
@@ -208,10 +235,17 @@ const SalesLineChart = () => {
                 }).format(date);
               }
             }]}
+            yAxis={[{
+              tickLabelStyle: {
+                fill: isDark ? '#E5E7EB' : '#374151',
+                fontSize: 12,
+                fontWeight: 500
+              }
+            }]}
             series={[{
               data: salesData.map(item => item.totalAmount),
               label: 'Daily Sales',
-              color: '#2563eb',
+              color: isDark ? '#34D399' : '#059669', // Emerald colors for dark/light
               curve: 'natural',
               showMark: true,
               valueFormatter: (value) => new Intl.NumberFormat('en-US', {
@@ -219,21 +253,77 @@ const SalesLineChart = () => {
                 currency: 'KES'
               }).format(value)
             }]}
+            slotProps={{
+              legend: {
+                direction: 'row',
+                position: { 
+                  vertical: 'top', 
+                  horizontal: 'middle'
+                },
+                padding: window.innerWidth < 480 ? 5 : window.innerWidth < 640 ? 10 : 20,
+                labelStyle: {
+                  fill: isDark ? '#E5E7EB' : '#374151',
+                  fontSize: window.innerWidth < 480 ? 9 : window.innerWidth < 640 ? 10 : 12,
+                  fontWeight: 500
+                }
+              }
+            }}
             width={chartDimensions.width}
             height={chartDimensions.height}
             margin={{ top: 20, right: 30, bottom: 40, left: 60 }}
             sx={{
               '.MuiLineElement-root': {
+                strokeWidth: 2,
                 strokeLinecap: 'round',
                 strokeLinejoin: 'round'
+              },
+              '.MuiChartsAxis-line': {
+                stroke: isDark ? '#4B5563' : '#E5E7EB',
+                strokeWidth: isDark ? 0.5 : 1,
+              },
+              '.MuiChartsAxis-tick': {
+                stroke: isDark ? '#4B5563' : '#E5E7EB',
+                strokeWidth: isDark ? 0.5 : 1,
+              },
+              '.MuiChartsAxis-tickLabel': {
+                fill: isDark ? '#E5E7EB' : '#374151',
+              },
+              '.MuiChartsAxis-grid': {
+                stroke: isDark ? 'rgba(75, 85, 99, 0.2)' : '#F3F4F6',
+                strokeDasharray: isDark ? '2 2' : 'none',
+              },
+              // Legend styling
+              '.MuiChartsLegend-label': {
+                fill: isDark ? '#E5E7EB' : '#374151',
+                fontSize: '0.875rem',
+                fontWeight: 500
+              },
+              // Tooltip styling
+              '.MuiTooltip-tooltip': {
+                backgroundColor: isDark ? 'rgba(17, 24, 39, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(8px)',
+                border: `1px solid ${isDark ? 'rgba(75, 85, 99, 0.3)' : '#E5E7EB'}`,
+                color: isDark ? '#F3F4F6' : '#111827',
+                boxShadow: isDark 
+                  ? '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2)' 
+                  : '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                borderRadius: '0.5rem',
+                padding: '0.5rem 0.75rem',
+                fontSize: '0.875rem',
+                fontWeight: 500
+              },
+              // Point markers
+              '.MuiMarkElement-root': {
+                stroke: isDark ? '#34D399' : '#059669',
+                fill: isDark ? '#064E3B' : '#ECFDF5',
+                '&:hover': {
+                  fill: isDark ? '#34D399' : '#059669',
+                }
               }
             }}
           />
         )}
       </div>
-
-      {/* Daily Stats Summary */}
-      
     </div>
   );
 };

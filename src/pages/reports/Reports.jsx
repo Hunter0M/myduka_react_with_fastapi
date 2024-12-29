@@ -9,9 +9,11 @@ import {
   Square3Stack3DIcon,
   ShoppingCartIcon
 } from '@heroicons/react/24/outline';
+import { useTheme } from '../../context/ThemeContext';
 
 const Reports = () => {
 const API_URL = import.meta.env.VITE_Product_URL;
+  const { isDark } = useTheme();
   const [reportData, setReportData] = useState({
     totalSales: 0,
     averagePrice: 0,
@@ -71,63 +73,75 @@ const API_URL = import.meta.env.VITE_Product_URL;
     fetchReportData();
   }, []);
 
-  if (isLoading) return <div className="p-6">Loading...</div>;
-  if (error) return <div className="p-6 text-red-500">{error}</div>;
+  if (isLoading) return <div className={`p-6 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Loading...</div>;
+  if (error) return <div className={`p-6 ${isDark ? 'text-red-400' : 'text-red-500'}`}>{error}</div>;
 
   return (
     <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6 sm:space-y-8">
       {/* Header Section */}
-      <div className="border-b pb-4">
+      <div className={`border-b ${isDark ? 'border-gray-700' : 'border-gray-200'} pb-4`}>
         <div className="flex items-center gap-2 sm:gap-3">
-          <ChartBarIcon className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600" />
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Inventory Reports</h1>
+          <ChartBarIcon className={`w-6 h-6 sm:w-8 sm:h-8 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
+          <h1 className={`text-2xl sm:text-3xl font-bold ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>
+            Inventory Reports
+          </h1>
         </div>
-        <p className="text-sm sm:text-base text-gray-600 mt-2">Analytics and insights about your inventory</p>
+        <p className={`text-sm sm:text-base ${isDark ? 'text-gray-400' : 'text-gray-600'} mt-2`}>
+          Analytics and insights about your inventory
+        </p>
       </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         {/* Total Stock Value Card */}
-        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 hover:shadow-md transition-shadow">
+        <div className={`${isDark ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-sm p-4 sm:p-6 
+          hover:shadow-md transition-shadow ${isDark ? 'border border-gray-700' : ''}`}>
           <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-            <div className="p-1.5 sm:p-2 bg-green-100 rounded-lg">
-              <CurrencyDollarIcon className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+            <div className={`p-1.5 sm:p-2 ${isDark ? 'bg-green-900/30' : 'bg-green-100'} rounded-lg`}>
+              <CurrencyDollarIcon className={`w-5 h-5 sm:w-6 sm:h-6 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
             </div>
-            <h3 className="text-xs sm:text-sm text-gray-600 font-medium uppercase tracking-wider">
+            <h3 className={`text-xs sm:text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'} 
+              font-medium uppercase tracking-wider`}>
               Total Stock Value
             </h3>
           </div>
-          <p className="text-xl sm:text-3xl font-bold text-gray-900">
+          <p className={`text-xl sm:text-3xl font-bold ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>
             KES {Number(reportData.stockValue).toLocaleString()}
           </p>
         </div>
 
         {/* Average Product Price Card */}
-        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 hover:shadow-md transition-shadow">
+        <div className={`${isDark ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-sm p-4 sm:p-6 
+          hover:shadow-md transition-shadow ${isDark ? 'border border-gray-700' : ''}`}>
           <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-            <div className="p-1.5 sm:p-2 bg-blue-100 rounded-lg">
-              <ShoppingCartIcon className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+            <div className={`p-1.5 sm:p-2 ${isDark ? 'bg-blue-900/30' : 'bg-blue-100'} rounded-lg`}>
+              <ShoppingCartIcon className={`w-5 h-5 sm:w-6 sm:h-6 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
             </div>
-            <h3 className="text-xs sm:text-sm text-gray-600 font-medium uppercase tracking-wider">
+            <h3 className={`text-xs sm:text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'} 
+              font-medium uppercase tracking-wider`}>
               Average Product Price
             </h3>
           </div>
-          <p className="text-xl sm:text-3xl font-bold text-gray-900">
+          <p className={`text-xl sm:text-3xl font-bold ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>
             KES {Number(reportData.averagePrice).toLocaleString()}
           </p>
         </div>
       </div>
 
       {/* Stock Levels */}
-      <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6">
+      <div className={`${isDark ? 'bg-gray-800' : 'bg-white'} rounded-xl shadow-sm p-4 sm:p-6 
+        ${isDark ? 'border border-gray-700' : ''}`}>
         <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
-          <Square3Stack3DIcon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
-          <h2 className="text-lg sm:text-xl font-bold text-gray-900">Stock Levels</h2>
+          <Square3Stack3DIcon className={`w-5 h-5 sm:w-6 sm:h-6 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
+          <h2 className={`text-lg sm:text-xl font-bold ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>
+            Stock Levels
+          </h2>
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Low Stock Card */}
-          <div className="bg-red-50 rounded-xl p-4 sm:p-6 border border-red-100">
+          <div className={`${isDark ? 'bg-red-900/20' : 'bg-red-50'} rounded-xl p-4 sm:p-6 
+            border ${isDark ? 'border-red-900/30' : 'border-red-100'}`}>
             <div className="flex items-center justify-between mb-3 sm:mb-4">
               <div className="flex items-center gap-2">
                 <ExclamationCircleIcon className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" />
@@ -145,7 +159,8 @@ const API_URL = import.meta.env.VITE_Product_URL;
           </div>
           
           {/* Medium Stock Card */}
-          <div className="bg-yellow-50 rounded-xl p-4 sm:p-6 border border-yellow-100">
+          <div className={`${isDark ? 'bg-yellow-900/20' : 'bg-yellow-50'} rounded-xl p-4 sm:p-6 
+            border ${isDark ? 'border-yellow-900/30' : 'border-yellow-100'}`}>
             <div className="flex items-center justify-between mb-3 sm:mb-4">
               <div className="flex items-center gap-2">
                 <ExclamationCircleIcon className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-600" />
@@ -163,7 +178,8 @@ const API_URL = import.meta.env.VITE_Product_URL;
           </div>
           
           {/* Good Stock Card */}
-          <div className="bg-green-50 rounded-xl p-4 sm:p-6 border border-green-100">
+          <div className={`${isDark ? 'bg-green-900/20' : 'bg-green-50'} rounded-xl p-4 sm:p-6 
+            border ${isDark ? 'border-green-900/30' : 'border-green-100'}`}>
             <div className="flex items-center justify-between mb-3 sm:mb-4">
               <div className="flex items-center gap-2">
                 <ExclamationCircleIcon className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />

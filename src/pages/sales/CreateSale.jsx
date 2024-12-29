@@ -3,8 +3,12 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Message from "../../components/Message";
 import Loading from "../../components/loading/Loading";
+import { useTheme } from "../../context/ThemeContext";
+import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+// import { FiSearch } from "react-icons/fi";
 
 const CreateSale = () => {
+  const { isDark } = useTheme();
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -20,6 +24,12 @@ const CreateSale = () => {
 
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [quantityError, setQuantityError] = useState("");
+  const [productSearch, setProductSearch] = useState("");
+
+  const filteredProducts = products.filter(product => 
+    product.stock_quantity > 0 && 
+    product.product_name.toLowerCase().includes(productSearch.toLowerCase())
+  );
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -228,7 +238,7 @@ const CreateSale = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className={`min-h-screen py-8 ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}>
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <Message
           message={message}
@@ -239,55 +249,90 @@ const CreateSale = () => {
 
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Create New Sale</h1>
-          <p className="mt-1 text-sm text-gray-600">
+          <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            Create New Sale
+          </h1>
+          <p className={`mt-1 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
             Add a new sale transaction to your records
           </p>
         </div>
 
         {/* Form */}
-        <div className="bg-white rounded-lg shadow-sm">
+        <div className={`rounded-lg shadow-sm ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
             <div className="grid grid-cols-1 gap-6">
               {/* Product Selection */}
               <div className="col-span-1">
                 <label
                   htmlFor="product_id"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className={`block text-sm font-medium mb-1 
+                    ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
                 >
                   Select Product *
                 </label>
-                {products && products.length > 0 ? (
-                  <select
-                    id="product_id"
-                    name="product_id"
-                    value={formData.product_id}
-                    onChange={handleChange}
-                    required
-                    className="block w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm text-gray-900 
-                             focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  >
-                    <option value="">Choose a product</option>
-                    {products
-                      .filter(product => product.stock_quantity > 0) // Filter out products with zero stock
-                      .map((product) => (
+                <div className="space-y-2">
+                  {/* Search Input */}
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={productSearch}
+                      onChange={(e) => setProductSearch(e.target.value)}
+                      placeholder="Search products..."
+                      className={`w-full pl-9 pr-3 py-2 text-sm border rounded-lg
+                        ${isDark 
+                          ? 'bg-gray-700 border-gray-600 text-gray-200 placeholder-gray-400' 
+                          : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'}`}
+                    />
+                    
+                    <MagnifyingGlassIcon 
+                      className={`absolute left-3 top-2.5 h-4 w-4 
+                        ${isDark ? 'text-gray-400' : 'text-gray-500'}`}
+                    />
+                  </div>
+
+                  {/* Product Dropdown */}
+                  {products && products.length > 0 ? (
+                    <select
+                      id="product_id"
+                      name="product_id"
+                      value={formData.product_id}
+                      onChange={handleChange}
+                      required
+                      className={`block w-full px-4 py-2.5 border rounded-lg shadow-sm
+                        focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm
+                        ${isDark 
+                          ? 'bg-gray-700 border-gray-600 text-gray-200' 
+                          : 'bg-white border-gray-300 text-gray-900'}`}
+                    >
+                      <option value="">Choose a product</option>
+                      {filteredProducts.map((product) => (
                         <option key={product.id} value={product.id}>
                           {product.product_name} (Stock: {product.stock_quantity})
                         </option>
                       ))}
-                  </select>
-                ) : (
-                  <div className="text-sm text-gray-500 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                    No products available
+                    </select>
+                  ) : (
+                    <div className={`text-sm p-3 rounded-lg border
+                      ${isDark 
+                        ? 'bg-gray-700 border-gray-600 text-gray-400' 
+                        : 'bg-gray-50 border-gray-200 text-gray-500'}`}>
+                      No products available
+                    </div>
+                  )}
+
+                  {/* Show count of filtered products */}
+                  <div className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                    {filteredProducts.length} product(s) found
                   </div>
-                )}
+                </div>
               </div>
 
               {/* Quantity */}
               <div className="col-span-1">
                 <label
                   htmlFor="quantity"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className={`block text-sm font-medium mb-1
+                    ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
                 >
                   Quantity *
                 </label>
@@ -301,25 +346,21 @@ const CreateSale = () => {
                       onChange={handleChange}
                       required
                       min="1"
-                      className={`block w-full px-4 py-2.5 border ${
-                        quantityError ? "border-red-300" : "border-gray-300"
-                      } rounded-lg shadow-sm text-gray-900 
-                      focus:ring-2 ${
-                        quantityError
-                          ? "focus:ring-red-500 focus:border-red-500"
-                          : "focus:ring-blue-500 focus:border-blue-500"
-                      } sm:text-sm`}
+                      className={`block w-full px-4 py-2.5 border rounded-lg shadow-sm
+                        focus:ring-2 sm:text-sm
+                        ${quantityError
+                          ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
+                          : isDark
+                            ? 'bg-gray-700 border-gray-600 text-gray-200 focus:ring-blue-500 focus:border-blue-500'
+                            : 'bg-white border-gray-300 text-gray-900 focus:ring-blue-500 focus:border-blue-500'
+                        }`}
                       placeholder="Enter quantity"
                     />
                   </div>
 
                   {/* Stock Information */}
                   {selectedProduct && (
-                    <div
-                      className={`text-sm ${
-                        quantityError ? "text-red-600" : "text-gray-600"
-                      }`}
-                    >
+                    <div className={`text-sm ${quantityError ? 'text-red-500' : isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                       {quantityError ? (
                         <div className="flex items-center space-x-1">
                           <svg
@@ -384,22 +425,25 @@ const CreateSale = () => {
             </div>
 
             {/* Form Actions */}
-            <div className="flex items-center justify-end space-x-4 pt-6 mt-6 border-t border-gray-200">
+            <div className={`flex items-center justify-end space-x-4 pt-6 mt-6 border-t
+              ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
               <button
                 type="button"
                 onClick={() => navigate("/sales")}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 
-                         rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 
-                         focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                className={`px-4 py-2 text-sm font-medium rounded-lg shadow-sm
+                  transition-colors duration-200
+                  ${isDark
+                    ? 'bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600'
+                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'}`}
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 className="inline-flex items-center px-4 py-2 text-sm font-medium text-white 
-                         bg-blue-600 border border-transparent rounded-lg shadow-sm hover:bg-blue-700 
-                         focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 
-                         transition-colors duration-200"
+                  bg-blue-600 border border-transparent rounded-lg shadow-sm hover:bg-blue-700 
+                  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 
+                  transition-colors duration-200"
               >
                 Create Sale
               </button>

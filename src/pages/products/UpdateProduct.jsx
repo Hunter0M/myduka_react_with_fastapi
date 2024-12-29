@@ -4,12 +4,14 @@ import axios from "axios";
 import Message from '../../components/Message';
 import Loading from '../../components/loading/Loading';
 import { eventEmitter } from '../../utils/eventEmitter';
+import { useTheme } from '../../context/ThemeContext';
 
 const API_URL = import.meta.env.VITE_Product_URL;
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const DEFAULT_IMAGE = '/assets/default-product.svg';
 
 const UpdateProduct = () => {
+  const { isDark } = useTheme();
   const { id } = useParams();
   const navigate = useNavigate();
   
@@ -211,7 +213,7 @@ const UpdateProduct = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className={`min-h-screen ${isDark ? 'bg-gray-900' : 'bg-gray-50'} py-12`}>
       <Message
         message={message}
         type={messageType}
@@ -220,85 +222,168 @@ const UpdateProduct = () => {
       />
       
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-lg shadow-sm p-6 md:p-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">Update Product</h1>
+        <div className={`rounded-lg shadow-sm p-6 md:p-8 ${isDark ? 'bg-gray-800' : 'bg-white'}`}>
+          <h1 className={`text-2xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            Update Product
+          </h1>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700">Product Name</label>
+              <label className={`block text-sm font-medium ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
+                Product Name
+              </label>
               <input
                 type="text"
                 name="product_name"
                 value={formData.product_name}
                 onChange={handleInputChange}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className={`mt-1 block w-full rounded-md px-3 py-2 text-sm 
+                  ${isDark ? `
+                    bg-gray-700 
+                    border-gray-600 
+                    text-gray-100
+                    focus:border-blue-400/50 
+                    focus:ring-blue-400/20
+                  ` : `
+                    bg-white
+                    border-gray-300 
+                    text-gray-900
+                    focus:border-blue-500 
+                    focus:ring-blue-500/20
+                  `}
+                  border focus:outline-none focus:ring-1`}
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">Description</label>
+              <label className={`block text-sm font-medium ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
+                Description
+              </label>
               <textarea
                 name="description"
                 value={formData.description}
                 onChange={handleInputChange}
                 rows={3}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className={`mt-1 block w-full rounded-md px-3 py-2 text-sm 
+                  ${isDark ? `
+                    bg-gray-700 
+                    border-gray-600 
+                    text-gray-100
+                    focus:border-blue-400/50 
+                    focus:ring-blue-400/20
+                  ` : `
+                    bg-white
+                    border-gray-300 
+                    text-gray-900
+                    focus:border-blue-500 
+                    focus:ring-blue-500/20
+                  `}
+                  border focus:outline-none focus:ring-1`}
               />
             </div>
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Stock Quantity</label>
+                <label className={`block text-sm font-medium ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
+                  Stock Quantity
+                </label>
                 <input
                   type="number"
                   name="stock_quantity"
                   value={formData.stock_quantity}
                   onChange={handleInputChange}
                   min="0"
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className={`mt-1 block w-full rounded-md px-3 py-2 text-sm 
+                    ${isDark ? `
+                      bg-gray-700 
+                      border-gray-600 
+                      text-gray-100
+                      focus:border-blue-400/50 
+                      focus:ring-blue-400/20
+                    ` : `
+                      bg-white
+                      border-gray-300 
+                      text-gray-900
+                      focus:border-blue-500 
+                      focus:ring-blue-500/20
+                    `}
+                    border focus:outline-none focus:ring-1`}
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">Buy Price</label>
+                <label className={`block text-sm font-medium ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
+                  Buy Price
+                </label>
                 <input
                   type="number"
                   name="product_price"
                   value={formData.product_price}
                   onChange={handleInputChange}
                   min="0"
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className={`mt-1 block w-full rounded-md px-3 py-2 text-sm 
+                    ${isDark ? `
+                      bg-gray-700 
+                      border-gray-600 
+                      text-gray-100
+                      focus:border-blue-400/50 
+                      focus:ring-blue-400/20
+                    ` : `
+                      bg-white
+                      border-gray-300 
+                      text-gray-900
+                      focus:border-blue-500 
+                      focus:ring-blue-500/20
+                    `}
+                    border focus:outline-none focus:ring-1`}
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">Sell Price</label>
+                <label className={`block text-sm font-medium ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
+                  Sell Price
+                </label>
                 <input
                   type="number"
                   name="selling_price"
                   value={formData.selling_price}
                   onChange={handleInputChange}
                   min="0"
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className={`mt-1 block w-full rounded-md px-3 py-2 text-sm 
+                    ${isDark ? `
+                      bg-gray-700 
+                      border-gray-600 
+                      text-gray-100
+                      focus:border-blue-400/50 
+                      focus:ring-blue-400/20
+                    ` : `
+                      bg-white
+                      border-gray-300 
+                      text-gray-900
+                      focus:border-blue-500 
+                      focus:ring-blue-500/20
+                    `}
+                    border focus:outline-none focus:ring-1`}
                   required
                 />
               </div>
             </div>
 
-            <div className="md:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-              <label 
-                htmlFor="image" 
-                className="block text-base font-semibold text-gray-800 mb-3"
-              >
+            <div className={`md:col-span-2 p-6 rounded-xl shadow-sm border
+              ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
+              <label className={`block text-base font-semibold mb-3 
+                ${isDark ? 'text-gray-100' : 'text-gray-800'}`}>
                 Product Image
               </label>
+              
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-                {/* Image Preview Container */}
                 <div className="relative group">
-                  <div className="w-40 h-40 rounded-xl overflow-hidden bg-gray-50 border-2 border-gray-200 border-dashed transition-all duration-300 group-hover:border-blue-400">
+                  <div className={`w-40 h-40 rounded-xl overflow-hidden border-2 border-dashed transition-all duration-300
+                    ${isDark ? 'bg-gray-700 border-gray-600 group-hover:border-blue-400' : 
+                              'bg-gray-50 border-gray-200 group-hover:border-blue-400'}`}>
                     <div className="relative w-full h-full">
                       {formData.image_url ? (
                         <img
@@ -326,7 +411,6 @@ const UpdateProduct = () => {
                   </div>
                 </div>
 
-                {/* Upload Controls */}
                 <div className="flex-grow space-y-4">
                   <div className="flex flex-col">
                     <input
@@ -339,13 +423,22 @@ const UpdateProduct = () => {
                     <div className="flex flex-col sm:flex-row gap-3">
                       <label
                         htmlFor="image"
-                        className="inline-flex items-center justify-center px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm 
-                                 text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 
-                                 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500
-                                 transition-all duration-200 cursor-pointer group"
+                        className={`inline-flex items-center justify-center px-4 py-2.5 rounded-lg shadow-sm text-sm font-medium
+                          transition-all duration-200 cursor-pointer
+                          ${isDark ? `
+                            bg-gray-700 
+                            border-gray-600 
+                            text-gray-200
+                            hover:bg-gray-600
+                          ` : `
+                            bg-white 
+                            border-gray-300 
+                            text-gray-700
+                            hover:bg-gray-50
+                          `}`}
                       >
                         <svg
-                          className="w-5 h-5 mr-2 text-gray-400 group-hover:text-gray-500 transition-colors duration-200"
+                          className={`w-5 h-5 mr-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -359,14 +452,23 @@ const UpdateProduct = () => {
                         </svg>
                         Upload New Image
                       </label>
-                      
+
                       <button
                         type="button"
                         onClick={handleRemoveImage}
-                        className="inline-flex items-center justify-center px-4 py-2.5 border border-red-200 rounded-lg
-                                 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100
-                                 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500
-                                 transition-all duration-200"
+                        className={`inline-flex items-center justify-center px-4 py-2.5 rounded-lg text-sm font-medium
+                          transition-all duration-200
+                          ${isDark ? `
+                            bg-red-900/30 
+                            border-red-400/30 
+                            text-red-400
+                            hover:bg-red-900/50
+                          ` : `
+                            bg-red-50 
+                            border-red-200 
+                            text-red-600
+                            hover:bg-red-100
+                          `}`}
                       >
                         <svg
                           className="w-5 h-5 mr-2"
@@ -393,14 +495,37 @@ const UpdateProduct = () => {
               <button
                 type="button"
                 onClick={() => navigate('/products')}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className={`px-4 py-2 text-sm font-medium rounded-md
+                  ${isDark ? `
+                    bg-gray-700 
+                    text-gray-200 
+                    border-gray-600
+                    hover:bg-gray-600
+                  ` : `
+                    bg-white 
+                    text-gray-700 
+                    border-gray-300
+                    hover:bg-gray-50
+                  `}
+                  border focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`px-4 py-2 text-sm font-medium text-white rounded-md
+                  ${isDark ? `
+                    bg-blue-600 
+                    hover:bg-blue-500 
+                    focus:ring-blue-400
+                  ` : `
+                    bg-blue-600 
+                    hover:bg-blue-700 
+                    focus:ring-blue-500
+                  `}
+                  border border-transparent focus:outline-none focus:ring-2 focus:ring-offset-2
+                  disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 {loading ? 'Updating...' : 'Update Product'}
               </button>

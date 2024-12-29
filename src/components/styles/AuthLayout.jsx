@@ -1,10 +1,30 @@
-const AuthLayout = ({ children }) => (
-  <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-white to-indigo-100">
-    <div className="absolute inset-0 z-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px] opacity-50" />
-    <div className="relative z-10 min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      {children}
-    </div>
-  </div>
-);
+// import React from 'react';
+// import { useTheme } from '../../context/ThemeContext';
+// import Footer from '../layout/Footer/Footer';
 
-export default AuthLayout; 
+// const AuthLayout = ({ children }) => {
+//   const { isDark } = useTheme();
+  
+//   return (
+//     <div className={`min-h-screen flex flex-col
+//       ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`}
+//     >
+//       {/* Fixed Background */}
+//       <div className={`fixed inset-0 transition-colors duration-200
+//         ${isDark ? 'bg-gray-900' : 'bg-gray-50'}`} 
+//       />
+
+//       {/* Main Content */}
+//       <div className="relative flex-grow flex flex-col z-10">
+//         {children}
+//       </div>
+
+//       {/* Footer */}
+//       {/* <div className="relative z-10">
+//         <Footer />
+//       </div> */}
+//     </div>
+//   );
+// };
+
+// export default AuthLayout;

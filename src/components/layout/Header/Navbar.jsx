@@ -2,40 +2,44 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useTheme } from '../../../context/ThemeContext';
 import { useAuth } from '../../../context/AuthContext';
-import { FiUpload, FiChevronDown } from 'react-icons/fi';
+import { FiUpload, FiChevronDown, FiUser, FiSettings, FiLogOut } from 'react-icons/fi';
 
 const Navbar = ({ toggleSidebar }) => {
   const { isDark, toggleTheme } = useTheme();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, user } = useAuth();
   const location = useLocation();
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
 
-  // Separate protected and public navigation
   const protectedNavigation = [
     { name: 'Dashboard', href: '/dashboard' },
     { name: 'Products', href: '/products' },
+    { name: 'Vendors', href: '/vendors' },
     { name: 'Sales', href: '/sales' },
     { name: 'Reports', href: '/reports' },
   ];
 
-  // Choose which navigation items to show based on authentication status
   const navigation = isAuthenticated ? protectedNavigation : [];
 
-  // Add this function to handle click outside
   const handleClickOutside = () => {
     setIsImportOpen(false);
+    setIsProfileOpen(false);
   };
 
   return (
     <nav className={`fixed top-0 w-full z-40 transition-colors duration-200
-      ${isDark ? 'bg-gray-800' : 'bg-blue-600'}`}>
+      ${isDark ? 'bg-gray-800 border-b border-gray-700' : 'bg-white border-b border-gray-200'}`}>
       <div className="px-4 h-16">
         <div className="flex items-center justify-between h-full">
           {/* Left side */}
           <div className="flex items-center space-x-4">
             <button
               onClick={toggleSidebar}
-              className="p-1.5 rounded-lg text-white hover:bg-blue-700 focus:outline-none lg:hidden"
+              className={`p-1.5 rounded-lg ${
+                isDark 
+                  ? 'text-gray-200 hover:bg-gray-700' 
+                  : 'text-gray-600 hover:bg-gray-100'
+              } focus:outline-none lg:hidden`}
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
@@ -44,139 +48,152 @@ const Navbar = ({ toggleSidebar }) => {
 
             {/* Logo and Home Link */}
             <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
-                <span className="text-white text-lg font-bold">IC</span>
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center
+                ${isDark ? 'bg-blue-500' : 'bg-blue-600'}`}>
+                <span className="text-white text-lg font-bold">MD</span>
               </div>
-              <span className="text-white text-lg font-semibold hidden sm:block">InventoryControl</span>
+              <span className={`text-lg font-semibold hidden sm:block
+                ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                MyDuka
+              </span>
             </Link>
-
-
 
             {/* Navigation Links */}
             <div className="hidden lg:flex items-center space-x-1">
-              <Link
-                to="/"
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 
-                  ${location.pathname === '/'
-                    ? 'text-white bg-blue-700'
-                    : 'text-blue-100 hover:text-white hover:bg-blue-700'
-                  }`}
-              >
-                Home
-              </Link>
               {navigation.map((item) => (
                 <Link
                   key={item.href}
                   to={item.href}
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 
-                    flex items-center 
                     ${location.pathname === item.href
-                      ? 'text-white bg-blue-700'
-                      : 'text-blue-100 hover:text-white hover:bg-blue-700'
+                      ? isDark 
+                        ? 'bg-gray-700 text-white' 
+                        : 'bg-gray-100 text-gray-900'
+                      : isDark
+                        ? 'text-gray-300 hover:text-white hover:bg-gray-700'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                     }`}
                 >
-                  {item.icon && item.icon}
                   {item.name}
                 </Link>
               ))}
-
-              {/* Import Dropdown */}
-              {isAuthenticated && (
-                <div className="relative">
-                  <button
-                    onClick={() => setIsImportOpen(!isImportOpen)}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200 
-                      flex items-center space-x-1
-                      ${location.pathname.startsWith('/import')
-                        ? 'text-white bg-blue-700'
-                        : 'text-blue-100 hover:text-white hover:bg-blue-700'
-                      }`}
-                  >
-                    <FiUpload className="w-4 h-4" />
-                    <span>Import</span>
-                    <FiChevronDown className={`w-4 h-4 transition-transform duration-200 
-                      ${isImportOpen ? 'transform rotate-180' : ''}`} 
-                    />
-                  </button>
-
-                  {/* Dropdown Menu */}
-                  {isImportOpen && (
-                    <>
-                      {/* Invisible overlay to handle clicking outside */}
-                      <div 
-                        className="fixed inset-0 z-10" 
-                        onClick={handleClickOutside}
-                      />
-                      
-                      <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-20">
-                        <div className="py-1">
-                          <Link
-                            to="/import"
-                            onClick={() => setIsImportOpen(false)}
-                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            Import Products
-                          </Link>
-                          <Link
-                            to="/import/history"
-                            onClick={() => setIsImportOpen(false)}
-                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          >
-                            Import History
-                          </Link>
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
             </div>
           </div>
 
           {/* Right side */}
-
           <div className="flex items-center space-x-4">
-            {/* Theme Toggle Button */}
+            {/* Theme Toggle */}
             <button
               onClick={toggleTheme}
-              className={`p-1.5 rounded-lg text-white 
-                ${isDark ? 'hover:bg-gray-700' : 'hover:bg-blue-700'}
-                focus:outline-none focus:ring-2 focus:ring-blue-400 
-                focus:ring-offset-2 transition-colors duration-200`}
+              className={`p-2 rounded-lg transition-colors duration-200
+                ${isDark
+                  ? 'bg-gray-700 text-yellow-400 hover:bg-gray-600'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
               aria-label="Toggle theme"
             >
               {isDark ? (
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
                 </svg>
               ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" />
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
                 </svg>
               )}
             </button>
 
+            {/* User Menu */}
             {isAuthenticated ? (
-              <button
-                onClick={logout}
-                className="text-white hover:bg-blue-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
-              >
-                Logout
-              </button>
-            ) : (
+              <div className="relative">
+                <button
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className={`flex items-center space-x-2 p-2 rounded-lg transition-colors duration-200
+                    ${isDark
+                      ? 'hover:bg-gray-700 text-gray-200'
+                      : 'hover:bg-gray-100 text-gray-600'
+                    }`}
+                >
+                  <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
+                    <FiUser className="w-5 h-5 text-white" />
+                  </div>
+                  <FiChevronDown className={`w-4 h-4 transition-transform duration-200 
+                    ${isProfileOpen ? 'transform rotate-180' : ''}`} 
+                  />
+                </button>
+
+                {/* Profile Dropdown */}
+                {isProfileOpen && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={handleClickOutside} />
+                    <div className={`absolute right-0 mt-2 w-48 rounded-lg shadow-lg z-20
+                      ${isDark ? 'bg-gray-800 ring-1 ring-gray-700' : 'bg-white ring-1 ring-black ring-opacity-5'}`}>
+                      <div className="py-1">
+                        <Link
+                          to="/profile"
+                          className={`flex items-center px-4 py-2 text-sm
+                            ${isDark
+                              ? 'text-gray-300 hover:bg-gray-700'
+                              : 'text-gray-700 hover:bg-gray-100'
+                            }`}
+                        >
+                          <FiUser className="w-4 h-4 mr-2" />
+                          Profile
+                        </Link>
+                        <Link
+                          to="/settings"
+                          className={`flex items-center px-4 py-2 text-sm
+                            ${isDark
+                              ? 'text-gray-300 hover:bg-gray-700'
+                              : 'text-gray-700 hover:bg-gray-100'
+                            }`}
+                        >
+                          <FiSettings className="w-4 h-4 mr-2" />
+                          Settings
+                        </Link>
+                        <button
+                          onClick={logout}
+                          className={`w-full flex items-center px-4 py-2 text-sm
+                            ${isDark
+                              ? 'text-red-400 hover:bg-gray-700'
+                              : 'text-red-600 hover:bg-gray-100'
+                            }`}
+                        >
+                          <FiLogOut className="w-4 h-4 mr-2" />
+                          Logout
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : ( 
+              // login and register buttons
               <div className="flex items-center space-x-2">
-                <Link
-                  to="/login"
-                  className="text-white hover:bg-blue-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
-                >
-                  Login
-                </Link>
-                <Link
-                  to="/register"
-                  className="text-white hover:bg-blue-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
-                >
-                  Register
-                </Link>
+                {location.pathname !== '/login' && ( // check if the current path is not the login page
+                  <Link
+                    to="/login"
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200
+                      ${isDark
+                        ? 'bg-blue-500 text-white hover:bg-blue-600'
+                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                      }`}
+                  >
+                    Login
+                  </Link>
+                )}
+                {location.pathname !== '/register' && (
+                  <Link
+                    to="/register"
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200
+                      ${isDark
+                        ? 'bg-blue-500 text-white hover:bg-blue-600'
+                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                      }`}
+                  >
+                    Register
+                  </Link>
+                )}
               </div>
             )}
           </div>

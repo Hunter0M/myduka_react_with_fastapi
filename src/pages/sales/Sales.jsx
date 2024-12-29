@@ -16,12 +16,14 @@ import Loading from "../../components/loading/Loading";
 import { FiTrendingUp, FiTrendingDown, FiDownload, FiPrinter, FiRefreshCw } from "react-icons/fi";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'; // npm install chart.js react-chartjs-2
 import { Doughnut } from 'react-chartjs-2';
-
+import SalesLayout from "../../components/layout/SalesLayout";
+import { useTheme } from "../../context/ThemeContext";
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 const url = import.meta.env.VITE_BACKEND_URL;
 
 const Sales = () => {
+  const { isDark } = useTheme();
   const [salesData, setSalesData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedSale, setSelectedSale] = useState(null);
@@ -55,20 +57,20 @@ const Sales = () => {
 
       // Process sales data - updated to handle numeric values properly
       const sortedSales = sales
-        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at)) // Sort by created_at in descending order
         .map(sale => ({
           ...sale,
           product: {
-            product_name: sale.product_name || 'Unknown Product',
-            selling_price: parseFloat(sale.product_price) || 0
+            product_name: sale.product_name || 'Unknown Product', // Ensure product_name is always a string
+            selling_price: parseFloat(sale.product_price) || 0 // Ensure selling_price is always a number
           },
-          total_amount: parseFloat(sale.total_amount) || 0,
-          quantity: parseInt(sale.quantity) || 0,
+          total_amount: parseFloat(sale.total_amount) || 0, // Ensure total_amount is always a number
+          quantity: parseInt(sale.quantity) || 0, // Ensure quantity is always an integer
         }));
 
       console.log('Processed sales:', sortedSales); // Debug log
-      setSalesData(sortedSales);
-      calculateStatistics(sortedSales);
+      setSalesData(sortedSales); // Set the processed sales data
+      calculateStatistics(sortedSales); // Calculate statistics
 
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -84,24 +86,49 @@ const Sales = () => {
 
   // Calculate statistics
   const calculateStatistics = (sales) => {
-    // Debug the dates
-    console.log('Calculating statistics for sales:', sales.map(sale => ({
-      id: sale.id,
-      date: sale.created_at,
-      amount: sale.total_amount
-    })));
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
 
-    const stats = sales.reduce((acc, sale) => {
+    // Filter sales based on selected time range
+    const filteredSales = sales.filter(sale => {
+      const saleDate = new Date(sale.created_at);
+      
+      switch (timeRange) {
+        case 'today':
+          return saleDate >= today;
+        case 'week':
+          const weekAgo = new Date(today);
+          weekAgo.setDate(weekAgo.getDate() - 7);
+          return saleDate >= weekAgo;
+        case 'month':
+          const monthAgo = new Date(today);
+          monthAgo.setMonth(monthAgo.getMonth() - 1);
+          return saleDate >= monthAgo;
+        case 'year':
+          const yearAgo = new Date(today);
+          yearAgo.setFullYear(yearAgo.getFullYear() - 1);
+          return saleDate >= yearAgo;
+        default:
+          return true;
+      }
+    });
+
+    const stats = filteredSales.reduce((acc, sale) => {
+      const saleDate = new Date(sale.created_at);
       const saleAmount = parseFloat(sale.total_amount) || 0;
       
-      // Add to total sales
-      acc.totalSales += saleAmount;
+      if (saleDate >= today) {
+        acc.todaySales += saleAmount;
+      }
       
-      // Consider all sales from the current day as "today's sales"
-      // This is a temporary fix until the dates are corrected in the database
-      acc.todaySales += saleAmount;
+      if (saleDate >= yesterday && saleDate < today) {
+        acc.yesterdaySales += saleAmount;
+      }
+      
+      acc.totalSales += saleAmount;
 
-      // Track unique customers
       if (sale.user_id && !acc.customers.has(sale.user_id)) {
         acc.customers.add(sale.user_id);
       }
@@ -114,39 +141,44 @@ const Sales = () => {
       customers: new Set(),
     });
 
-    console.log('Calculated stats:', stats);
-
     setStatistics({
       totalSales: stats.totalSales,
-      todaySales: stats.totalSales, // Temporarily show all sales as today's sales
-      yesterdaySales: 0,
-      averageTransaction: sales.length ? (stats.totalSales / sales.length) : 0,
+      todaySales: stats.todaySales,
+      yesterdaySales: stats.yesterdaySales,
+      averageTransaction: filteredSales.length ? (stats.totalSales / filteredSales.length) : 0,
       totalCustomers: stats.customers.size,
     });
   };
 
+  // Add useEffect to recalculate statistics when timeRange changes
+  useEffect(() => {
+    calculateStatistics(salesData);
+  }, [timeRange, salesData]);
+
   // Filter sales by date
   const getFilteredSales = () => {
     const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-    const week = new Date(today - 7 * 24 * 60 * 60 * 1000).getTime();
-    const month = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate()).getTime();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
     return salesData.filter(sale => {
       const saleDate = new Date(sale.created_at);
-      const saleDateStart = new Date(
-        saleDate.getFullYear(), 
-        saleDate.getMonth(), 
-        saleDate.getDate()
-      ).getTime();
       
-      switch (dateFilter) {
-        case "today":
-          return saleDateStart === today;
-        case "week":
-          return saleDateStart >= week;
-        case "month":
-          return saleDateStart >= month;
+      // Time range filtering
+      switch (timeRange) {
+        case 'today':
+          return saleDate >= today;
+        case 'week':
+          const weekAgo = new Date(today);
+          weekAgo.setDate(weekAgo.getDate() - 7);
+          return saleDate >= weekAgo;
+        case 'month':
+          const monthAgo = new Date(today);
+          monthAgo.setMonth(monthAgo.getMonth() - 1);
+          return saleDate >= monthAgo;
+        case 'year':
+          const yearAgo = new Date(today);
+          yearAgo.setFullYear(yearAgo.getFullYear() - 1);
+          return saleDate >= yearAgo;
         default:
           return true;
       }
@@ -157,62 +189,69 @@ const Sales = () => {
     );
   };
 
-  const showNotification = (message, type = 'success') => {
-    setNotification({ show: true, message, type });
+  const showNotification = (message, type = 'success') => { // Show notification
+    setNotification({ show: true, message, type }); // Set notification
     setTimeout(() => {
-      setNotification({ show: false, message: '', type: '' });
+      setNotification({ show: false, message: '', type: '' }); // Hide notification after 3 seconds
     }, 3000);
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this sale?')) {
-      setLoading(true);
+    if (window.confirm('Are you sure you want to delete this sale?')) { // Confirm delete
+      setLoading(true); // Set loading to true
       try {
-        await axios.delete(`${url}/sales/${id}`);
-        showNotification('Sale deleted successfully');
-        fetchData();
+        await axios.delete(`${url}/sales/${id}`); // Delete sale
+        showNotification('Sale deleted successfully'); // Show success notification
+        fetchData(); // Fetch data
       } catch (error) {
-        console.error("Error deleting sale:", error);
-        showNotification('Failed to delete sale', 'error');
+        console.error("Error deleting sale:", error); // Log error
+        showNotification('Failed to delete sale', 'error'); // Show error notification
       } finally {
-        setLoading(false);
+        setLoading(false); // Set loading to false
       }
     }
   };
 
-  const getSalesPerformance = () => {
-    const previousTotal = statistics.totalSales - statistics.todaySales;
-    const percentageChange = previousTotal ? 
-      ((statistics.todaySales - previousTotal) / previousTotal) * 100 : 0;
+  const getSalesPerformance = () => { // Get sales performance
+    if (statistics.yesterdaySales === 0) {
+      // If there were no sales yesterday, any sales today represent 100% increase
+      return {
+        trend: statistics.todaySales > 0 ? 'up' : 'neutral', // Set trend to up if today's sales are greater than 0
+        percentage: statistics.todaySales > 0 ? 100 : 0 // Set percentage to 100 if today's sales are greater than 0
+      };
+    }
+
+    const percentageChange = ((statistics.todaySales - statistics.yesterdaySales) / statistics.yesterdaySales) * 100; // Calculate percentage change
+    
     return {
-      trend: percentageChange >= 0 ? 'up' : 'down',
-      percentage: Math.abs(percentageChange).toFixed(1)
+      trend: percentageChange >= 0 ? 'up' : 'down', // Set trend to up if percentage change is greater than or equal to 0
+      percentage: Math.abs(percentageChange).toFixed(1) // Set percentage to absolute value of percentage change
     };
   };
 
   const handleRefreshData = async () => {
-    setIsRefreshing(true);
-    await fetchData();
-    setIsRefreshing(false);
+    setIsRefreshing(true); // Set refreshing to true
+    await fetchData(); // Fetch data
+    setIsRefreshing(false); // Set refreshing to false
   };
 
   // Add this useEffect to handle screen resize
   useEffect(() => {
-    const handleResize = () => {
-      const width = window.innerWidth;
-      setScreenSize({
-        isMobile: width < 640,
-        isSmall: width < 768,
-        isTablet: width < 1024,
-        isDesktop: width >= 1024
+    const handleResize = () => { // Handle screen resize
+      const width = window.innerWidth; // Get window width
+      setScreenSize({ // Set screen size
+        isMobile: width < 640, // Set isMobile to true if width is less than 640
+        isSmall: width < 768, // Set isSmall to true if width is less than 768
+        isTablet: width < 1024, // Set isTablet to true if width is less than 1024
+        isDesktop: width >= 1024 // Set isDesktop to true if width is greater than or equal to 1024
       });
     };
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener('resize', handleResize); // Add event listener for screen resize
+    return () => window.removeEventListener('resize', handleResize); // Remove event listener for screen resize
   }, []);
 
-  // Update the columns definition
+  // columns
   const columns = [
     {
       name: "#",
@@ -226,8 +265,9 @@ const Sales = () => {
       sortable: true,
       width: screenSize.isMobile ? "130px" : "auto",
       cell: row => (
-        <div className="text-sm font-medium text-gray-900 truncate max-w-[130px] sm:max-w-full">
-          {`${row.first_name || ''} ${row.last_name || ''}`}
+        <div className={`text-sm font-medium truncate max-w-[130px] sm:max-w-full 
+          ${isDark ? 'text-gray-200' : 'text-gray-900'}`}> 
+          {`${row.first_name || ''} ${row.last_name || ''}`} 
         </div>
       ),
     },
@@ -237,7 +277,8 @@ const Sales = () => {
       sortable: true,
       width: screenSize.isMobile ? "130px" : "auto",
       cell: row => (
-        <div className="text-sm text-gray-600 truncate max-w-[130px] sm:max-w-full">
+        <div className={`text-sm truncate max-w-[130px] sm:max-w-full
+          ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
           {row.product.product_name}
         </div>
       ),
@@ -248,7 +289,8 @@ const Sales = () => {
       sortable: true,
       width: screenSize.isMobile ? "60px" : "80px",
       cell: row => (
-        <span className="text-sm font-medium text-gray-900">
+        <span className={`text-sm font-medium
+          ${isDark ? 'text-gray-200' : 'text-gray-900'}`}>
           {row.quantity}
         </span>
       ),
@@ -260,7 +302,8 @@ const Sales = () => {
       omit: screenSize.isMobile || screenSize.isSmall,
       width: "120px",
       cell: row => (
-        <div className="text-sm text-gray-900">
+        <div className={`text-sm
+          ${isDark ? 'text-gray-200' : 'text-gray-900'}`}>
           KES {(row.product.selling_price || 0).toLocaleString()}
         </div>
       ),
@@ -271,7 +314,8 @@ const Sales = () => {
       sortable: true,
       width: screenSize.isMobile ? "100px" : "120px",
       cell: row => (
-        <div className="text-sm font-medium text-gray-900">
+        <div className={`text-sm font-medium
+          ${isDark ? 'text-gray-200' : 'text-gray-900'}`}>
           KES {(row.total_amount || 0).toLocaleString()}
         </div>
       ),
@@ -283,7 +327,8 @@ const Sales = () => {
       omit: screenSize.isMobile || screenSize.isSmall,
       width: "120px",
       cell: row => (
-        <div className="text-sm text-gray-500">
+        <div className={`text-sm
+          ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
           {row.created_at ? new Date(row.created_at).toLocaleDateString() : 'N/A'}
         </div>
       ),
@@ -297,7 +342,10 @@ const Sales = () => {
               setSelectedSale(row);
               setShowReceipt(true);
             }}
-            className="p-1.5 sm:p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+            className={`p-1.5 sm:p-2 rounded-lg transition-colors duration-200
+              ${isDark 
+                ? 'text-blue-400 hover:bg-blue-900/50' 
+                : 'text-blue-600 hover:bg-blue-50'}`}
             title="View Receipt"
           >
             <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -306,14 +354,20 @@ const Sales = () => {
           </button>
           <Link
             to={`/sales/edit/${row.id}`}
-            className="p-1.5 sm:p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200"
+            className={`p-1.5 sm:p-2 rounded-lg transition-colors duration-200
+              ${isDark 
+                ? 'text-green-400 hover:bg-green-900/50' 
+                : 'text-green-600 hover:bg-green-50'}`}
             title="Edit Sale"
           >
             <PencilIcon className="h-4 w-4 sm:h-5 sm:w-5" />
           </Link>
           <button
             onClick={() => handleDelete(row.id)}
-            className="p-1.5 sm:p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
+            className={`p-1.5 sm:p-2 rounded-lg transition-colors duration-200
+              ${isDark 
+                ? 'text-red-400 hover:bg-red-900/50' 
+                : 'text-red-600 hover:bg-red-50'}`}
             title="Delete Sale"
           >
             <TrashIcon className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -327,51 +381,51 @@ const Sales = () => {
     },
   ];
 
-  const SalesTrend = ({ data }) => {
-    const todayPercentage = data.totalSales ? (data.todaySales / data.totalSales) * 100 : 0;
+  const SalesTrend = ({ data }) => { // Sales trend
+    const todayPercentage = data.totalSales ? (data.todaySales / data.totalSales) * 100 : 0; // Calculate today's percentage
     
-    const chartData = {
-      labels: ['Today', 'Previous'],
-      datasets: [{
-        data: [data.todaySales, data.totalSales - data.todaySales],
-        backgroundColor: ['#3B82F6', '#E5E7EB'],
-        borderWidth: 0,
-        cutout: '80%',
-        borderRadius: 8,
+    const chartData = { // Chart data
+      labels: ['Today', 'Previous'], // Labels
+      datasets: [{ // Datasets
+        data: [data.todaySales, data.totalSales - data.todaySales], // Data
+        backgroundColor: ['#3B82F6', '#E5E7EB'], // Background color
+        borderWidth: 0, // Border width
+        cutout: '80%', // Cutout
+        borderRadius: 8, // Border radius
       }]
     };
 
-    const options = {
+    const options = { // Chart options
       plugins: {
-        legend: { display: false },
+        legend: { display: false }, // Hide legend
         tooltip: {
-          enabled: true,
-          callbacks: {
-            label: (context) => {
-              const value = context.raw;
+          enabled: true, // Enable tooltip
+          callbacks: { // Callbacks
+            label: (context) => { // Label
+              const value = context.raw; // Get value
               return `KES ${value.toLocaleString()}`;
             }
           },
-          backgroundColor: '#1F2937',
-          padding: 12,
-          cornerRadius: 8,
-          titleFont: {
-            size: 14,
-            weight: 'bold'
+          backgroundColor: '#1F2937', // Background color
+          padding: 12, // Padding
+          cornerRadius: 8, // Corner radius
+          titleFont: { // Title font
+            size: 14, // Font size
+            weight: 'bold' // Font weight
           },
-          bodyFont: {
-            size: 13
+          bodyFont: { // Body font
+            size: 13 // Font size
           }
         }
       },
-      maintainAspectRatio: false,
-      rotation: -90,
-      circumference: 360,
+      maintainAspectRatio: false, // Maintain aspect ratio
+      rotation: -90, // Rotation
+      circumference: 360, // Circumference
     };
 
     return (
       <div className="relative h-24 w-24">
-        <Doughnut data={chartData} options={options} />
+        <Doughnut data={chartData} options={options} /> 
         <div className="absolute inset-0 flex items-center justify-center flex-col">
           <span className="text-xs font-medium text-gray-500">Today</span>
           <span className="text-sm font-bold text-gray-900">{todayPercentage.toFixed(0)}%</span>
@@ -399,20 +453,20 @@ const Sales = () => {
       'Date'
     ];
 
-    const csvData = filteredData.map(sale => [
-      sale.id,
-      `${sale.first_name || ''} ${sale.last_name || ''}`,
-      sale.product.product_name,
-      sale.quantity,
-      sale.product.selling_price,
-      sale.total_amount,
+    const csvData = filteredData.map(sale => [ // Map filtered data to CSV data
+      sale.id, // Sale ID
+      `${sale.first_name || ''} ${sale.last_name || ''}`, // Customer name
+      sale.product.product_name, // Product name
+      sale.quantity, // Quantity
+      sale.product.selling_price, // Unit price
+      sale.total_amount, // Total amount
       new Date(sale.created_at).toLocaleDateString()
     ]);
 
-    const csvContent = [
-      headers.join(','),
-      ...csvData.map(row => row.join(','))
-    ].join('\n');
+    const csvContent = [ // CSV content
+      headers.join(','), // Join headers with commas
+      ...csvData.map(row => row.join(',')) // Map rows to CSV data
+    ].join('\n'); // Join rows with new lines
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
@@ -425,7 +479,7 @@ const Sales = () => {
   };
 
   // Update the PrintLayout component
-  const PrintLayout = ({ salesData }) => {
+  const PrintLayout = ({ salesData }) => { 
     return (
       <div className="print-only" style={{ display: 'none' }}>
         <div style={{ width: 'auto', margin: '20px', padding: '20px', fontFamily: 'Arial, sans-serif' }}>
@@ -512,246 +566,284 @@ const Sales = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 print:p-0 print:bg-white">
-      {/* Add PrintLayout component with only salesData */}
-      <PrintLayout salesData={getFilteredSales()} />
+    <SalesLayout>
+      <div className={`min-h-screen p-2 sm:p-4 print:p-0 ${isDark ? 'bg-gray-900' : 'bg-gray-100'} print:bg-white`}>
+        <PrintLayout salesData={getFilteredSales()} />
 
-      {/* Rest of your existing dashboard content with print:hidden */}
-      <div className="print:hidden">
-        {/* Notification */}
-        {notification.show && (
-          <div
-            className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${
+        <div className="print:hidden space-y-4 sm:space-y-6">
+          {/* Notification - Made more visible on mobile */}
+          {notification.show && (
+            <div className={`fixed top-4 right-4 left-4 sm:left-auto z-50 p-4 rounded-lg shadow-lg transform transition-all duration-300 ${
               notification.type === 'error' 
-                ? 'bg-red-100 text-red-800 border border-red-200' 
-                : 'bg-green-100 text-green-800 border border-green-200'
-            }`}
-            role="alert"
-          >
-            <p className="text-sm font-medium">{notification.message}</p>
-          </div>
-        )}
-        
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header with welcome message */}
-          <div className="mb-8">
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex flex-col gap-2">
-                <h1 className="text-3xl font-bold text-gray-900">Sales Dashboard</h1>
-                <p className="text-gray-600">Welcome back! Here's what's happening with your sales today.</p>
-              </div>
-              
-              {/* Quick Actions */}
-              <div className="flex gap-3">
-                <button
-                  onClick={handleRefreshData}
-                  className={`p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 
-                    transition-all duration-200 ${isRefreshing ? 'animate-spin' : ''}`}
-                  title="Refresh Data"
-                >
-                  <FiRefreshCw className="h-5 w-5" />
-                </button>
-                <button
-                  onClick={() => {
-                    const printWindow = window.open('', '', 'width=800,height=600');
-                    printWindow.document.write('<html><head><title>Print Receipt</title>');
-                    printWindow.document.write('</head><body>');
-                    printWindow.document.write(document.querySelector('.print-only').innerHTML);
-                    printWindow.document.write('</body></html>');
-                    printWindow.document.close();
-                    printWindow.focus();
-                    printWindow.print();
-                    printWindow.close();
-                  }}
-                  className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 
-                    transition-all duration-200"
-                  title="Print Report"
-                >
-                  <FiPrinter className="h-5 w-5" />
-                </button>
-                <button
-                  onClick={exportToCSV}
-                  className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 
-                    transition-all duration-200"
-                  title="Export Data"
-                >
-                  <FiDownload className="h-5 w-5" />
-                </button>
-              </div>
+                ? `${isDark ? 'bg-red-900 text-red-100 border-red-800' : 'bg-red-100 text-red-800 border-red-200'}`
+                : `${isDark ? 'bg-green-900 text-green-100 border-green-800' : 'bg-green-100 text-green-800 border-green-200'}`
+            }`}>
+              <p className="text-sm font-medium">{notification.message}</p>
             </div>
+          )}
 
-            {/* Time Range Selector */}
-            <div className="flex gap-2 mb-6">
-              {['today', 'week', 'month', 'year'].map((range) => (
-                <button
-                  key={range}
-                  onClick={() => setTimeRange(range)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 
-                    ${timeRange === range 
-                      ? 'bg-blue-600 text-white' 
-                      : 'bg-white text-gray-600 hover:bg-gray-50'}`}
-                >
-                  {range.charAt(0).toUpperCase() + range.slice(1)}
-                </button>
-              ))}
-            </div>
+          {/* Enhanced Header Section */}
+          <div className={` bg-opacity-95 backdrop-blur-lg border-b shadow-sm
+            ${isDark ? 'bg-gray-800/95 border-gray-700' : 'bg-white/95 border-gray-200'}`}>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+              {/* Header Content */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                {/* Title Section */}
+                <div className="space-y-1">
+                  <h1 className={`text-xl sm:text-2xl font-bold tracking-tight
+                    ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                    Sales Dashboard
+                  </h1>
+                  <p className={`text-sm sm:text-base font-medium
+                    ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Welcome back! Here's what's happening with your sales today.
+                  </p>
+                </div>
 
-            {/* Statistics Cards - Updated Design */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {/* Total Sales Card */}
-              <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-100 relative overflow-hidden">
-                <div className="absolute top-3 right-3 bg-white/80 backdrop-blur-sm rounded-xl p-1 shadow-sm">
-                  <SalesTrend data={statistics} />
-                </div>
-                <div className="absolute top-0 right-0 w-20 h-20 transform translate-x-6 -translate-y-6">
-                  <div className="absolute inset-0 bg-blue-100 rounded-full opacity-20"></div>
-                </div>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 bg-blue-50 rounded-lg">
-                    <CurrencyDollarIcon className="h-6 w-6 text-blue-600" />
+                {/* Actions Group */}
+                <div className="flex items-center gap-3">
+                  {/* Quick Action Buttons */}
+                  <div className="flex items-center gap-2">
+                    {/* Refresh Button */}
+                    <button
+                      onClick={handleRefreshData}
+                      className={`p-2 rounded-lg border transition-all duration-200 hover:scale-105
+                        ${isDark 
+                          ? 'border-gray-700 text-gray-300 hover:bg-gray-700/50 active:bg-gray-600' 
+                          : 'border-gray-200 text-gray-600 hover:bg-gray-50 active:bg-gray-100'}`}
+                      title="Refresh Data"
+                    >
+                      <FiRefreshCw className={`h-5 w-5 ${isRefreshing ? 'animate-spin' : ''}`} />
+                    </button>
+
+                    {/* Print Button */}
+                    <button
+                      onClick={() => {
+                        const printWindow = window.open('', '', 'width=800,height=600');
+                        printWindow.document.write('<html><head><title>Print Receipt</title>');
+                        printWindow.document.write('</head><body>');
+                        printWindow.document.write(document.querySelector('.print-only').innerHTML);
+                        printWindow.document.write('</body></html>');
+                        printWindow.document.close();
+                        printWindow.focus();
+                        printWindow.print();
+                        printWindow.close();
+                      }}
+                      className={`p-2 rounded-lg border transition-all duration-200 hover:scale-105
+                        ${isDark 
+                          ? 'border-gray-700 text-gray-300 hover:bg-gray-700/50 active:bg-gray-600' 
+                          : 'border-gray-200 text-gray-600 hover:bg-gray-50 active:bg-gray-100'}`}
+                      title="Print Report"
+                    >
+                      <FiPrinter className="h-5 w-5" />
+                    </button>
+
+                    {/* Export Button */}
+                    <button
+                      onClick={exportToCSV}
+                      className={`p-2 rounded-lg border transition-all duration-200 hover:scale-105
+                        ${isDark 
+                          ? 'border-gray-700 text-gray-300 hover:bg-gray-700/50 active:bg-gray-600' 
+                          : 'border-gray-200 text-gray-600 hover:bg-gray-50 active:bg-gray-100'}`}
+                      title="Export Data"
+                    >
+                      <FiDownload className="h-5 w-5" />
+                    </button>
                   </div>
-                  <h3 className="text-sm font-medium text-gray-600">Total Sales</h3>
-                </div>
-                <p className="text-2xl font-bold text-gray-900 mb-2">
-                  KES {(statistics.totalSales || 0).toLocaleString()}
-                </p>
-                <div className="flex items-center gap-2 text-sm">
-                  {getSalesPerformance().trend === 'up' ? (
-                    <FiTrendingUp className="text-green-500" />
-                  ) : (
-                    <FiTrendingDown className="text-red-500" />
-                  )}
-                  <span className={getSalesPerformance().trend === 'up' ? 'text-green-600' : 'text-red-600'}>
-                    {getSalesPerformance().percentage}%
-                  </span>
-                  <span className="text-gray-500">vs yesterday</span>
-                </div>
-              </div>
 
-              {/* Today's Sales Card */}
-              <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-100">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 bg-green-50 rounded-lg">
-                    <CalendarIcon className="h-6 w-6 text-green-600" />
-                  </div>
-                  <h3 className="text-sm font-medium text-gray-600">Today's Sales</h3>
-                </div>
-                <p className="text-2xl font-bold text-gray-900 mb-2">
-                  KES {(statistics.todaySales || 0).toLocaleString()}
-                </p>
-                <p className="text-sm text-gray-500">
-                  {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-                </p>
-              </div>
-
-              {/* Average Transaction Card */}
-              <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-100">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 bg-purple-50 rounded-lg">
-                    <ShoppingCartIcon className="h-6 w-6 text-purple-600" />
-                  </div>
-                  <h3 className="text-sm font-medium text-gray-600">Avg. Transaction</h3>
-                </div>
-                <p className="text-2xl font-bold text-gray-900 mb-2">
-                  KES {(statistics.averageTransaction || 0).toLocaleString()}
-                </p>
-                <p className="text-sm text-gray-500">Per sale average</p>
-              </div>
-
-              {/* Total Customers Card */}
-              <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 p-6 border border-gray-100">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 bg-orange-50 rounded-lg">
-                    <UserGroupIcon className="h-6 w-6 text-orange-600" />
-                  </div>
-                  <h3 className="text-sm font-medium text-gray-600">Total Customers</h3>
-                </div>
-                <p className="text-2xl font-bold text-gray-900 mb-2">
-                  {(statistics.totalCustomers || 0).toLocaleString()}
-                </p>
-                <p className="text-sm text-gray-500">Lifetime customers</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Updated Filters and Search */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-6">
-            <div className="p-4 flex flex-col sm:flex-row gap-4">
-              <div className="flex flex-wrap gap-4 items-center justify-between w-full">
-                <div className="flex gap-4 flex-1">
-                  <select
-                    value={dateFilter}
-                    onChange={(e) => setDateFilter(e.target.value)}
-                    className="rounded-lg border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
+                  {/* New Sale Button */}
+                  <Link
+                    to="/sales/create"
+                    className={`inline-flex items-center px-4 py-2.5 rounded-lg font-medium
+                      transition-all duration-200 transform hover:scale-105
+                      shadow-sm hover:shadow-lg active:scale-95
+                      ${isDark 
+                        ? 'bg-blue-600 hover:bg-blue-500 text-white border border-blue-500/50' 
+                        : 'bg-blue-600 hover:bg-blue-700 text-white border-transparent'
+                      }`}
                   >
-                    <option value="all">All Time</option>
-                    <option value="today">Today</option>
-                    <option value="week">This Week</option>
-                    <option value="month">This Month</option>
-                  </select>
-
-                  <div className="relative flex-1 max-w-md">
-                    <input
-                      type="search"
-                      placeholder="Search by customer name or sale ID..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full rounded-lg border-gray-300 text-sm pl-10 
-                        focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
-                    />
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                      </svg>
-                    </div>
-                  </div>
+                    <svg 
+                      className="h-5 w-5 mr-2" 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor"
+                    >
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={2} 
+                        d="M12 6v6m0 0v6m0-6h6m-6 0H6" 
+                      />
+                    </svg>
+                    <span className="text-sm sm:text-base">New Sale</span>
+                  </Link>
                 </div>
+              </div>
 
-                <Link
-                  to="/sales/create"
-                  className="inline-flex items-center px-4 py-2 border border-transparent 
-                    text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 
-                    transition-all duration-200 shadow-sm hover:shadow-md"
-                >
-                  <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  New Sale
-                </Link>
+              {/* Time Range Selector */}
+              <div className="flex gap-2 mt-4 pb-1 overflow-x-auto scrollbar-hide">
+                {['today', 'week', 'month', 'year'].map((range) => (
+                  <button
+                    key={range}
+                    onClick={() => setTimeRange(range)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium 
+                      whitespace-nowrap transition-all duration-200
+                      hover:scale-105 active:scale-95
+                      ${timeRange === range 
+                        ? 'bg-blue-600 text-white shadow-md' 
+                        : isDark
+                          ? 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                          : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+                      }`}
+                  >
+                    {range.charAt(0).toUpperCase() + range.slice(1)}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
 
-          {/* Sales Table */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="p-4 border-b border-gray-100">
-              <h2 className="text-lg font-semibold text-gray-900">Recent Sales</h2>
-              <p className="text-sm text-gray-500">
-                Showing {getFilteredSales().length} of {salesData.length} total sales
+          {/* Statistics Cards - Updated Design with Dark Mode Support */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Total Sales Card */}
+            <div className={`rounded-xl shadow-sm hover:shadow-md transition-all duration-300 p-6 border relative overflow-hidden
+              ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
+              <div className={`absolute top-3 right-3 ${isDark ? 'bg-gray-800/80' : 'bg-white/80'} backdrop-blur-sm rounded-xl p-1 shadow-sm`}>
+                <SalesTrend data={statistics} />
+              </div>
+              <div className="absolute top-0 right-0 w-20 h-20 transform translate-x-6 -translate-y-6">
+                <div className={`absolute inset-0 rounded-full opacity-20 ${isDark ? 'bg-blue-900' : 'bg-blue-100'}`}></div>
+              </div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className={`p-2 rounded-lg ${isDark ? 'bg-blue-900/50' : 'bg-blue-50'}`}>
+                  <CurrencyDollarIcon className={`h-6 w-6 ${isDark ? 'text-blue-400' : 'text-blue-600'}`} />
+                </div>
+                <h3 className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Total Sales</h3>
+              </div>
+              <p className={`text-2xl font-bold mb-2 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>
+                KES {(statistics.totalSales || 0).toLocaleString()}
+              </p>
+              <div className="flex items-center gap-2 text-sm">
+                {getSalesPerformance().trend === 'up' ? (
+                  <FiTrendingUp className="text-green-500" />
+                ) : (
+                  <FiTrendingDown className="text-red-500" />
+                )}
+                <span className={getSalesPerformance().trend === 'up' ? 'text-green-500' : 'text-red-500'}>
+                  {getSalesPerformance().percentage}%
+                </span>
+                <span className={`${isDark ? 'text-gray-400' : 'text-gray-500'}`}>vs yesterday</span>
+              </div>
+            </div>
+
+            {/* Today's Sales Card */}
+            <div className={`rounded-xl shadow-sm hover:shadow-md transition-all duration-300 p-6 border
+              ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
+              <div className="flex items-center gap-3 mb-4">
+                <div className={`p-2 rounded-lg ${isDark ? 'bg-green-900/50' : 'bg-green-50'}`}>
+                  <CalendarIcon className={`h-6 w-6 ${isDark ? 'text-green-400' : 'text-green-600'}`} />
+                </div>
+                <h3 className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Today's Sales</h3>
+              </div>
+              <p className={`text-2xl font-bold mb-2 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>
+                KES {(statistics.todaySales || 0).toLocaleString()}
+              </p>
+              <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
               </p>
             </div>
-            
+
+            {/* Average Transaction Card */}
+            <div className={`rounded-xl shadow-sm hover:shadow-md transition-all duration-300 p-6 border
+              ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
+              <div className="flex items-center gap-3 mb-4">
+                <div className={`p-2 rounded-lg ${isDark ? 'bg-purple-900/50' : 'bg-purple-50'}`}>
+                  <ShoppingCartIcon className={`h-6 w-6 ${isDark ? 'text-purple-400' : 'text-purple-600'}`} />
+                </div>
+                <h3 className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Avg. Transaction</h3>
+              </div>
+              <p className={`text-2xl font-bold mb-2 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>
+                KES {(statistics.averageTransaction || 0).toLocaleString()}
+              </p>
+              <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Per sale average</p>
+            </div>
+
+            {/* Total Customers Card */}
+            <div className={`rounded-xl shadow-sm hover:shadow-md transition-all duration-300 p-6 border
+              ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'}`}>
+              <div className="flex items-center gap-3 mb-4">
+                <div className={`p-2 rounded-lg ${isDark ? 'bg-orange-900/50' : 'bg-orange-50'}`}>
+                  <UserGroupIcon className={`h-6 w-6 ${isDark ? 'text-orange-400' : 'text-orange-600'}`} />
+                </div>
+                <h3 className={`text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Total Customers</h3>
+              </div>
+              <p className={`text-2xl font-bold mb-2 ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>
+                {(statistics.totalCustomers || 0).toLocaleString()}
+              </p>
+              <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Lifetime customers</p>
+            </div>
+          </div>
+
+          {/* Search and Filters - Improved mobile layout */}
+          <div className={`mx-3 sm:mx-6 lg:mx-8 p-3 sm:p-4 rounded-lg border
+            ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <div className="relative flex-1">
+                <input
+                  type="search"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search sales..."
+                  className={`w-full pl-9 pr-3 py-2 text-sm rounded-lg border transition-colors duration-200
+                    ${isDark 
+                      ? 'bg-gray-700 border-gray-600 text-gray-200 placeholder-gray-400'
+                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'}`}
+                />
+                <svg 
+                  className={`absolute left-3 top-2.5 h-4 w-4 ${isDark ? 'text-gray-400' : 'text-gray-400'}`}
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0118 0z" />
+                </svg>
+              </div>
+              
+              <select
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                className={`rounded-lg border text-sm transition-colors duration-200
+                  ${isDark 
+                    ? 'bg-gray-700 border-gray-600 text-gray-200'
+                    : 'bg-white border-gray-300 text-gray-900'}`}
+              >
+                <option value="all">All Time</option>
+                <option value="today">Today</option>
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+              </select>
+            </div>
+          </div>
+
+          {/* DataTable - Improved responsive behavior */}
+          <div className={`mx-3 sm:mx-6 lg:mx-8 rounded-lg shadow-sm overflow-hidden
+            ${isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
             <DataTable
               columns={columns}
               data={getFilteredSales()}
               pagination
-              paginationPerPage={screenSize.isMobile ? 5 : screenSize.isTablet ? 8 : 10}
-              paginationRowsPerPageOptions={[5, 8, 10, 25, 50]}
-              highlightOnHover
-              pointerOnHover
               responsive
-              progressPending={loading}
-              progressComponent={<Loading />}
-              noDataComponent={
-                <div className="p-4 text-center text-gray-500">
-                  No sales records found
-                </div>
-              }
+              theme={isDark ? 'dark' : 'light'}
               customStyles={{
+                table: {
+                  style: {
+                    backgroundColor: isDark ? '#1F2937' : 'white',
+                  },
+                },
                 headRow: {
                   style: {
-                    backgroundColor: '#F9FAFB',
-                    borderBottom: '1px solid #E5E7EB',
+                    backgroundColor: isDark ? '#374151' : '#F9FAFB',
+                    borderBottomColor: isDark ? '#4B5563' : '#E5E7EB',
                     minHeight: '48px',
                   },
                 },
@@ -759,47 +851,55 @@ const Sales = () => {
                   style: {
                     fontSize: '0.875rem',
                     fontWeight: '600',
-                    color: '#4B5563',
-                    padding: screenSize.isMobile ? '0.5rem' : '1rem',
+                    color: isDark ? '#D1D5DB' : '#4B5563',
+                    padding: '12px 16px',
                   },
                 },
                 rows: {
                   style: {
+                    backgroundColor: isDark ? '#1F2937' : 'white',
                     fontSize: '0.875rem',
-                    color: '#1F2937',
+                    color: isDark ? '#D1D5DB' : '#1F2937',
                     minHeight: '48px',
-                    padding: screenSize.isMobile ? '0.5rem' : '0.75rem 1rem',
                     '&:hover': {
-                      backgroundColor: '#F9FAFB',
+                      backgroundColor: isDark ? '#374151' : '#F9FAFB',
                       cursor: 'pointer',
                     },
-                  },
-                  stripedStyle: {
-                    backgroundColor: '#F9FAFB',
                   },
                 },
                 cells: {
                   style: {
-                    padding: screenSize.isMobile ? '4px' : '8px 16px',
+                    padding: '12px 16px',
+                  },
+                },
+                pagination: {
+                  style: {
+                    backgroundColor: isDark ? '#1F2937' : 'white',
+                    color: isDark ? '#D1D5DB' : '#4B5563',
+                    borderTopColor: isDark ? '#4B5563' : '#E5E7EB',
+                  },
+                  pageButtonsStyle: {
+                    color: isDark ? '#D1D5DB' : '#4B5563',
+                    fill: isDark ? '#D1D5DB' : '#4B5563',
                   },
                 },
               }}
             />
           </div>
         </div>
-      </div>
 
-      {/* Receipt Modal */}
-      {showReceipt && selectedSale && (
-        <Receipt
-          sale={selectedSale}
-          onClose={() => {
-            setShowReceipt(false);
-            setSelectedSale(null);
-          }}
-        />
-      )}
-    </div>
+        {/* Receipt Modal */}
+        {showReceipt && selectedSale && (
+          <Receipt
+            sale={selectedSale}
+            onClose={() => {
+              setShowReceipt(false);
+              setSelectedSale(null);
+            }}
+          />
+        )}
+      </div>
+    </SalesLayout>
   );
 };
 
