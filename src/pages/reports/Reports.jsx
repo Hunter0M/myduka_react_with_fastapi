@@ -76,6 +76,19 @@ const API_URL = import.meta.env.VITE_Product_URL;
   if (isLoading) return <div className={`p-6 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Loading...</div>;
   if (error) return <div className={`p-6 ${isDark ? 'text-red-400' : 'text-red-500'}`}>{error}</div>;
 
+  if (!reportData.stockValue && !reportData.averagePrice && 
+      Object.values(reportData.stockLevels).every(value => value === 0)) {
+    return (
+      <div className={`p-6 flex flex-col items-center justify-center space-y-4 ${
+        isDark ? 'text-gray-300' : 'text-gray-600'
+      }`}>
+        <ExclamationCircleIcon className="w-12 h-12" />
+        <p className="text-xl font-medium text-center">No inventory data available</p>
+        <p className="text-sm text-center">Please add some products to view inventory reports</p>
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6 sm:space-y-8">
       {/* Header Section */}
